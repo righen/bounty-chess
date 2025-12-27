@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { TournamentState, Player } from '@/types';
+import { Box, AppBar, Toolbar, IconButton, Typography, Chip } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
 import { 
   loadTournamentState, 
   saveTournamentState, 
@@ -198,8 +200,19 @@ export default function Home() {
     );
   }
 
+  const getPageTitle = () => {
+    switch(view) {
+      case 'players': return '👥 Manage Players';
+      case 'leaderboard': return '🏆 Leaderboard';
+      case 'round': return '♟️ Current Round';
+      case 'prizes': return '🎖️ Prizes';
+      case 'setup': return '📥 Import Players';
+      default: return 'Bounty Chess';
+    }
+  };
+
   return (
-    <div className="min-h-screen flex">
+    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       {/* Sidebar */}
       <Sidebar
         sidebarOpen={sidebarOpen}
@@ -215,52 +228,62 @@ export default function Home() {
       />
 
       {/* Main Content */}
-      <main className={`flex-1 w-full transition-all duration-300 ease-in-out ${sidebarOpen ? "lg:pl-[290px]" : ""}`}>
+      <Box 
+        component="main" 
+        sx={{ 
+          flexGrow: 1,
+          width: '100%',
+          transition: 'margin 225ms cubic-bezier(0, 0, 0.2, 1) 0ms',
+          ...(sidebarOpen && {
+            marginLeft: { lg: '290px' },
+          }),
+        }}
+      >
         {/* Header */}
-        <header className="sticky top-0 flex w-full bg-white border-gray-200 z-99999 border-b print:hidden">
-          <div className="flex items-center justify-between grow p-4">
-            <div className="flex items-center justify-between gap-2 sm:gap-4 lg:justify-normal lg:border-b-0">
-              {/* Hamburger Button */}
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="flex items-center justify-center w-11 h-11 text-gray-500 border border-gray-200 rounded-lg z-99999 cursor-pointer hover:bg-gray-50 transition-colors"
+        <AppBar 
+          position="sticky" 
+          color="inherit" 
+          elevation={1}
+          sx={{ 
+            bgcolor: 'background.paper',
+            '@media print': { display: 'none' },
+          }}
+        >
+          <Toolbar>
+            <IconButton
+              edge="start"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              sx={{ mr: 2 }}
+            >
+              <MenuIcon />
+            </IconButton>
+
+            <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
+              {getPageTitle()}
+            </Typography>
+
+            {syncing && (
+              <Chip 
+                label="Syncing..." 
+                color="success" 
+                size="small" 
+                sx={{ mr: 2, display: { xs: 'none', sm: 'flex' } }}
+              />
+            )}
+
+            {state && (
+              <Typography 
+                variant="body2" 
+                sx={{ display: { xs: 'none', md: 'block' }, color: 'text.secondary' }}
               >
-                <svg className="w-[22px] h-[22px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-              
-              {/* Page Title */}
-              <h1 className="text-xl md:text-2xl font-semibold text-gray-900">
-                {view === 'players' && 'Manage Players'}
-                {view === 'leaderboard' && 'Leaderboard'}
-                {view === 'round' && 'Current Round'}
-                {view === 'prizes' && 'Prizes'}
-                {view === 'setup' && 'Import Players'}
-              </h1>
-            </div>
-            
-            <div className="items-center gap-4 flex justify-end relative overflow-hidden">
-              {syncing && (
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-50 text-green-700 text-sm">
-                  <div className="animate-pulse">●</div>
-                  <span className="font-semibold hidden sm:inline">Syncing...</span>
-                </div>
-              )}
-              
-              {state && (
-                <div className="hidden md:flex items-center gap-2 text-sm text-gray-600">
-                  <span className="font-semibold text-gray-900">{state.players.length}</span>
-                  <span>Players •</span>
-                  <span className="font-semibold text-gray-900">Round {state.currentRound}/{state.totalRounds}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </header>
+                <strong>{state.players.length}</strong> Players • <strong>Round {state.currentRound}/{state.totalRounds}</strong>
+              </Typography>
+            )}
+          </Toolbar>
+        </AppBar>
 
         {/* Content */}
-        <div className="p-2 lg:p-4">
+        <Box sx={{ p: { xs: 1, sm: 2, lg: 4 } }}>
           {!state && view === 'setup' && (
             <PlayerImport onPlayersImported={handlePlayersImported} />
           )}
@@ -299,8 +322,8 @@ export default function Home() {
               totalRounds={state.totalRounds}
             />
           )}
-        </div>
-      </main>
-    </div>
+        </Box>
+      </Box>
+    </Box>
   );
 }
