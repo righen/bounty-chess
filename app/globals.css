@@ -1,35 +1,63 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ============================================
+   BOUNTY CHESS - DESIGN SYSTEM
+   ============================================ */
+
+@theme {
+  /* Color Palette - 3 colors + neutrals */
+  --color-primary: #8b5cf6;      /* Purple - Primary actions */
+  --color-accent: #3b82f6;       /* Blue - Info, links */
+  --color-success: #10b981;      /* Green - Wins, positive */
+  --color-warning: #f59e0b;      /* Yellow - Bounty, important */
+  --color-danger: #ef4444;       /* Red - Losses, delete */
+  
+  /* Neutral Colors */
+  --color-bg-base: #0a0f1e;      /* Deep blue-black background */
+  --color-bg-surface: #1a1f2e;   /* Cards, elevated surfaces */
+  --color-bg-hover: #2a2f3e;     /* Hover states */
+  --color-border: #2a2f3e;       /* Subtle borders */
+  --color-text: #e2e8f0;         /* Primary text */
+  --color-text-muted: #94a3b8;   /* Secondary text */
+  
+  /* Spacing Scale (8px base) */
+  --spacing-1: 0.5rem;   /* 8px */
+  --spacing-2: 1rem;     /* 16px */
+  --spacing-3: 1.5rem;   /* 24px */
+  --spacing-4: 2rem;     /* 32px */
+  --spacing-5: 2.5rem;   /* 40px */
+  --spacing-6: 3rem;     /* 48px */
+  
+  /* Typography Scale */
+  --font-xs: 0.75rem;    /* 12px */
+  --font-sm: 0.875rem;   /* 14px */
+  --font-base: 1rem;     /* 16px */
+  --font-lg: 1.125rem;   /* 18px */
+  --font-xl: 1.25rem;    /* 20px */
+  --font-2xl: 1.5rem;    /* 24px */
+  --font-3xl: 1.875rem;  /* 30px */
+  --font-4xl: 2.25rem;   /* 36px */
+  
+  /* Border Radius */
+  --radius-sm: 0.375rem;  /* 6px */
+  --radius-md: 0.5rem;    /* 8px */
+  --radius-lg: 0.75rem;   /* 12px */
+  --radius-xl: 1rem;      /* 16px */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ============================================
+   GLOBAL STYLES
+   ============================================ */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-  /* Improve touch scrolling on mobile */
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Larger text for better readability */
 html {
   font-size: 16px;
+  scroll-behavior: smooth;
 }
 
 @media (min-width: 768px) {
@@ -38,53 +66,182 @@ html {
   }
 }
 
-/* Ensure all buttons are touch-friendly (44x44px minimum) */
-button, 
-.btn,
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--color-bg-base);
+  color: var(--color-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================
+   BUTTONS & INPUTS (Touch-friendly)
+   ============================================ */
+
+button,
 input[type="button"],
-input[type="submit"],
-a.button {
+input[type="submit"] {
   min-height: 44px;
   min-width: 44px;
   touch-action: manipulation;
+  cursor: pointer;
 }
 
-/* Improve form input touch targets */
 input[type="text"],
 input[type="number"],
 input[type="email"],
+input[type="file"],
 select,
 textarea {
   min-height: 50px;
   font-size: 16px; /* Prevent zoom on iOS */
 }
 
-/* Better tap highlighting */
-button, a {
-  -webkit-tap-highlight-color: rgba(59, 130, 246, 0.3);
-}
-
-/* Prevent text selection on buttons */
 button {
   -webkit-user-select: none;
   user-select: none;
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
+/* Better tap highlighting */
+button, a {
+  -webkit-tap-highlight-color: rgba(139, 92, 246, 0.2);
 }
 
-/* Hide scrollbars but keep functionality */
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.container-custom {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-2);
 }
 
-/* Print styles */
+/* Card */
+.card {
+  background-color: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* Button Base */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: var(--font-base);
+  transition: all 0.2s ease;
+  border: none;
+  outline: none;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* Button Variants */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #7c3aed;
+}
+
+.btn-accent {
+  background-color: var(--color-accent);
+  color: white;
+}
+
+.btn-accent:hover {
+  background-color: #2563eb;
+}
+
+.btn-success {
+  background-color: var(--color-success);
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #059669;
+}
+
+.btn-danger {
+  background-color: var(--color-danger);
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #dc2626;
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.btn-ghost:hover {
+  background-color: var(--color-bg-hover);
+}
+
+/* Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: var(--font-sm);
+  font-weight: 600;
+}
+
+.badge-primary {
+  background-color: rgba(139, 92, 246, 0.15);
+  color: var(--color-primary);
+}
+
+.badge-accent {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: var(--color-accent);
+}
+
+.badge-success {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: var(--color-success);
+}
+
+.badge-warning {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: var(--color-warning);
+}
+
+.badge-danger {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: var(--color-danger);
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
 @media print {
   .no-print {
     display: none !important;
@@ -93,5 +250,9 @@ html {
   body {
     background: white;
     color: black;
+  }
+  
+  .card {
+    border: 1px solid #ddd;
   }
 }

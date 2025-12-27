@@ -198,22 +198,22 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <header className="bg-gray-800 shadow-md py-4 md:py-6 sticky top-0 z-50">
-        <div className="container mx-auto px-3 sm:px-4">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-2">
-            <div className="text-center sm:text-left w-full sm:w-auto">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-blue-400">
+    <div className="min-h-screen bg-[#0a0f1e]">
+      <header className="bg-[#1a1f2e] shadow-lg border-b border-[#2a2f3e] py-5 md:py-6 sticky top-0 z-50">
+        <div className="container-custom">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div className="text-center sm:text-left">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#e2e8f0]">
                 🎯 Bounty Chess
               </h1>
               {state && (
-                <p className="text-base sm:text-lg text-gray-400 mt-1">
+                <p className="text-base md:text-lg text-[#94a3b8] mt-2">
                   {state.players.length} Players • Round {state.currentRound}/{state.totalRounds}
                 </p>
               )}
             </div>
             {syncing && (
-              <div className="flex items-center space-x-2 text-green-400 text-base sm:text-sm bg-green-900/30 px-3 py-1 rounded-full">
+              <div className="badge badge-success gap-2 px-4 py-3">
                 <div className="animate-pulse text-lg">●</div>
                 <span className="font-semibold">Syncing...</span>
               </div>

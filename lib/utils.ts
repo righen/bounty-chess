@@ -108,17 +108,17 @@ export function formatBounty(bounty: number): string {
   return `${bounty} ₱`;
 }
 
-export function getAgeCategory(age: number): { label: string; color: string } {
+export function getAgeCategory(age: number): { label: string; color: string; badgeClass: string } {
   if (age < 10) {
-    return { label: 'U10', color: 'bg-blue-600 text-white' };
+    return { label: 'U10', color: 'bg-blue-600 text-white', badgeClass: 'badge-accent' };
   } else if (age < 12) {
-    return { label: 'U12', color: 'bg-cyan-600 text-white' };
+    return { label: 'U12', color: 'bg-cyan-600 text-white', badgeClass: 'badge-accent' };
   } else if (age < 16) {
-    return { label: 'U16', color: 'bg-green-600 text-white' };
+    return { label: 'U16', color: 'bg-green-600 text-white', badgeClass: 'badge-success' };
   } else if (age < 18) {
-    return { label: 'U18', color: 'bg-yellow-600 text-white' };
+    return { label: 'U18', color: 'bg-yellow-600 text-white', badgeClass: 'badge-warning' };
   } else {
-    return { label: 'Adult', color: 'bg-gray-600 text-white' };
+    return { label: 'Adult', color: 'bg-gray-600 text-white', badgeClass: 'badge-primary' };
   }
 }
 

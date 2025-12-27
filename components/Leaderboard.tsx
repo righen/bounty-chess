@@ -1,7 +1,7 @@
 'use client';
 
 import { Player } from '@/types';
-import { formatBounty, getCriminalStatusColor, getAgeCategory } from '@/lib/utils';
+import { formatBounty, getAgeCategory } from '@/lib/utils';
 import LeaderboardMobile from './LeaderboardMobile';
 
 interface LeaderboardProps {
@@ -13,52 +13,61 @@ interface LeaderboardProps {
   onGeneratePairing: () => void;
 }
 
-export default function Leaderboard({ players, currentRound, totalRounds, tournamentStarted, onStartTournament, onGeneratePairing }: LeaderboardProps) {
+export default function Leaderboard({ 
+  players, 
+  currentRound, 
+  totalRounds, 
+  tournamentStarted, 
+  onStartTournament, 
+  onGeneratePairing 
+}: LeaderboardProps) {
   // Sort players by bounty (highest first)
   const sortedPlayers = [...players].sort((a, b) => {
-    if (b.bounty !== a.bounty) {
-      return b.bounty - a.bounty;
-    }
+    if (b.bounty !== a.bounty) return b.bounty - a.bounty;
     return b.wins - a.wins;
   });
 
   const canGenerateNextRound = currentRound < totalRounds && tournamentStarted;
 
   return (
-    <div className="max-w-7xl mx-auto px-2 sm:px-4">
+    <div className="container-custom max-w-7xl">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
         <div>
-          <h2 className="text-2xl md:text-3xl font-bold text-blue-400">🏆 Leaderboard</h2>
-          <p className="text-base md:text-lg text-gray-400 mt-1">
-            <span className={`font-semibold ${tournamentStarted ? 'text-green-400' : 'text-yellow-400'}`}>
-              {tournamentStarted ? '✓ Started' : '⏸️ Not Started'}
-            </span>
-          </p>
+          <h2 className="text-3xl md:text-4xl font-bold text-[#e2e8f0]">
+            🏆 Leaderboard
+          </h2>
+          <div className="mt-2">
+            {tournamentStarted ? (
+              <span className="badge badge-success">✓ Tournament Started</span>
+            ) : (
+              <span className="badge badge-warning">⏸️ Not Started</span>
+            )}
+          </div>
         </div>
         
-        {/* Action Buttons */}
+        {/* Action Button */}
         <div className="w-full md:w-auto">
           {!tournamentStarted && (
             <button
               onClick={onStartTournament}
-              className="w-full md:w-auto bg-green-600 hover:bg-green-700 active:scale-95 text-white font-bold 
-                py-4 px-8 rounded-lg transition-all text-lg shadow-lg"
+              className="btn btn-success w-full md:w-auto px-8 py-4 text-lg"
             >
-              🚀 Start Tournament
+              <span className="text-2xl mr-2">🚀</span>
+              Start Tournament
             </button>
           )}
           {tournamentStarted && canGenerateNextRound && (
             <button
               onClick={onGeneratePairing}
-              className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold 
-                py-4 px-6 rounded-lg transition-all text-base md:text-lg shadow-lg"
+              className="btn btn-primary w-full md:w-auto px-8 py-4 text-lg"
             >
-              ▶️ Generate Round {currentRound + 1}
+              <span className="text-xl mr-2">▶️</span>
+              Generate Round {currentRound + 1}
             </button>
           )}
           {tournamentStarted && !canGenerateNextRound && (
-            <div className="text-lg md:text-xl font-bold text-yellow-400 text-center md:text-right">
+            <div className="text-2xl font-bold text-[#f59e0b] text-center">
               🎉 Tournament Complete!
             </div>
           )}
@@ -66,133 +75,195 @@ export default function Leaderboard({ players, currentRound, totalRounds, tourna
       </div>
 
       {/* Mobile View (Cards) */}
-      <div className="block md:hidden">
+      <div className="block lg:hidden">
         <LeaderboardMobile players={sortedPlayers} />
       </div>
 
       {/* Desktop View (Table) */}
-      <div className="hidden md:block bg-gray-800 rounded-lg overflow-hidden shadow-xl">
+      <div className="hidden lg:block card">
         <div className="overflow-x-auto">
-          <table className="w-full text-base">
-            <thead className="bg-gray-700">
-              <tr>
-                <th className="px-4 py-4 text-left text-base font-bold">Rank</th>
-                <th className="px-4 py-4 text-left text-base font-bold">ID</th>
-                <th className="px-4 py-4 text-left text-base font-bold">Name</th>
-                <th className="px-4 py-4 text-center text-base font-bold">Age</th>
-                <th className="px-4 py-4 text-center text-base font-bold">Gender</th>
-                <th className="px-4 py-4 text-center text-base font-bold">Bounty</th>
-                <th className="px-4 py-4 text-center text-base font-bold">Record</th>
-                <th className="px-4 py-4 text-center text-base font-bold">Sheriff</th>
-                <th className="px-4 py-4 text-center text-base font-bold">Status</th>
+          <table className="w-full">
+            {/* Table Header */}
+            <thead>
+              <tr className="border-b border-[#2a2f3e]">
+                <th className="px-6 py-4 text-left font-semibold text-[#94a3b8] uppercase text-xs tracking-wider">
+                  Rank
+                </th>
+                <th className="px-6 py-4 text-left font-semibold text-[#94a3b8] uppercase text-xs tracking-wider">
+                  Player
+                </th>
+                <th className="px-6 py-4 text-center font-semibold text-[#94a3b8] uppercase text-xs tracking-wider">
+                  Age
+                </th>
+                <th className="px-6 py-4 text-center font-semibold text-[#94a3b8] uppercase text-xs tracking-wider">
+                  Gender
+                </th>
+                <th className="px-6 py-4 text-center font-semibold text-[#94a3b8] uppercase text-xs tracking-wider">
+                  Bounty
+                </th>
+                <th className="px-6 py-4 text-center font-semibold text-[#94a3b8] uppercase text-xs tracking-wider">
+                  Record
+                </th>
+                <th className="px-6 py-4 text-center font-semibold text-[#94a3b8] uppercase text-xs tracking-wider">
+                  Sheriff
+                </th>
+                <th className="px-6 py-4 text-center font-semibold text-[#94a3b8] uppercase text-xs tracking-wider">
+                  Status
+                </th>
               </tr>
             </thead>
+
+            {/* Table Body */}
             <tbody>
-              {sortedPlayers.map((player, index) => (
-                <tr
-                  key={player.id}
-                  className={`border-t border-gray-700 ${
-                    index < 2 ? 'bg-yellow-900/20' : ''
-                  } hover:bg-gray-700/50`}
-                >
-                  <td className="px-4 py-4">
-                    <span className={`text-xl font-bold ${index < 2 ? 'text-yellow-400' : 'text-gray-300'}`}>
-                      #{index + 1}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4 text-gray-400 text-base">{player.id}</td>
-                  <td className="px-4 py-4">
-                    <div className="font-semibold text-lg">{player.name} {player.surname}</div>
-                    <div className="text-sm text-gray-400">{player.currentAddress}</div>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <span className={`text-sm font-semibold ${
-                        player.age < 10 ? 'text-blue-400' :
-                        player.age < 16 ? 'text-green-400' :
-                        'text-gray-400'
-                      }`}>
-                        {player.age}
+              {sortedPlayers.map((player, index) => {
+                const ageCategory = player.age > 0 ? getAgeCategory(player.age) : null;
+                const isTop3 = index < 3;
+                
+                return (
+                  <tr
+                    key={player.id}
+                    className={`
+                      border-b border-[#2a2f3e] transition-colors hover:bg-[#2a2f3e]
+                      ${index % 2 === 0 ? 'bg-[#1a1f2e]' : 'bg-[#0a0f1e]'}
+                    `}
+                  >
+                    {/* Rank */}
+                    <td className="px-6 py-5">
+                      <div className="flex items-center gap-2">
+                        {isTop3 ? (
+                          <span className="text-2xl font-bold text-[#f59e0b]">
+                            #{index + 1}
+                          </span>
+                        ) : (
+                          <span className="text-lg font-semibold text-[#94a3b8]">
+                            #{index + 1}
+                          </span>
+                        )}
+                        {isTop3 && <span className="text-xl">{index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}</span>}
+                      </div>
+                    </td>
+
+                    {/* Player Name */}
+                    <td className="px-6 py-5">
+                      <div>
+                        <div className="font-semibold text-lg text-[#e2e8f0]">
+                          {player.name} {player.surname}
+                        </div>
+                        <div className="text-sm text-[#94a3b8] mt-0.5">
+                          ID: {player.id} • {player.currentAddress || 'No address'}
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Age */}
+                    <td className="px-6 py-5 text-center">
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-base font-medium text-[#e2e8f0]">
+                          {player.age > 0 ? player.age : '-'}
+                        </span>
+                        {ageCategory && (
+                          <span className={`badge ${ageCategory.badgeClass || 'badge-accent'} text-xs`}>
+                            {ageCategory.label}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* Gender */}
+                    <td className="px-6 py-5 text-center">
+                      <span className={`badge ${player.gender === 'F' ? 'badge-danger' : 'badge-accent'}`}>
+                        {player.gender === 'F' ? '♀ Female' : '♂ Male'}
                       </span>
-                      <span className={`text-xs px-2 py-0.5 rounded font-semibold ${getAgeCategory(player.age).color}`}>
-                        {getAgeCategory(player.age).label}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <span className={`text-sm font-semibold ${
-                      player.gender === 'F' ? 'text-pink-400' : 'text-blue-400'
-                    }`}>
-                      {player.gender === 'F' ? 'Female' : 'Male'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <span className="text-xl font-bold text-yellow-400">
-                      {formatBounty(player.bounty)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <div className="text-sm">
-                      <span className="text-green-400">{player.wins}W</span>
-                      {' - '}
-                      <span className="text-red-400">{player.losses}L</span>
-                      {' - '}
-                      <span className="text-gray-400">{player.draws}D</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    {player.hasSheriffBadge ? (
-                      <span className="text-2xl">🛡️</span>
-                    ) : (
-                      <span className="text-gray-600">✗</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    <span
-                      className={`px-3 py-1 rounded text-xs font-semibold uppercase ${getCriminalStatusColor(
-                        player.criminalStatus
-                      )} text-white`}
-                    >
-                      {player.criminalStatus}
-                    </span>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+
+                    {/* BOUNTY - THE FOCUS */}
+                    <td className="px-6 py-5 text-center">
+                      <div className="flex flex-col items-center">
+                        <div className="text-3xl font-bold text-[#f59e0b] tracking-tight">
+                          {player.bounty}₱
+                        </div>
+                      </div>
+                    </td>
+
+                    {/* Record */}
+                    <td className="px-6 py-5 text-center">
+                      <div className="flex items-center justify-center gap-3 text-sm">
+                        <span className="text-[#10b981] font-semibold">{player.wins}W</span>
+                        <span className="text-[#ef4444] font-semibold">{player.losses}L</span>
+                        <span className="text-[#94a3b8] font-semibold">{player.draws}D</span>
+                      </div>
+                    </td>
+
+                    {/* Sheriff Badge */}
+                    <td className="px-6 py-5 text-center">
+                      {player.hasSheriffBadge ? (
+                        <span className="text-3xl" title="Has Sheriff Badge">🛡️</span>
+                      ) : (
+                        <span className="text-2xl text-[#2a2f3e]" title="No Sheriff Badge">✗</span>
+                      )}
+                    </td>
+
+                    {/* Criminal Status - ONLY SHOW IF NOT NORMAL */}
+                    <td className="px-6 py-5 text-center">
+                      {player.criminalStatus !== 'normal' && (
+                        <span className={`badge ${
+                          player.criminalStatus === 'angry' ? 'badge-warning' : 'badge-danger'
+                        }`}>
+                          {player.criminalStatus === 'angry' ? '😠 Angry' : '😡 Mad'}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gray-800 rounded-lg p-4">
-          <h3 className="text-lg font-semibold mb-2">Tournament Stats</h3>
-          <div className="space-y-1 text-sm">
-            <div>Total Players: <span className="font-bold">{players.length}</span></div>
-            <div>Rounds Completed: <span className="font-bold">{currentRound}</span></div>
-            <div>Rounds Remaining: <span className="font-bold">{Math.max(0, (totalRounds || 9) - currentRound)}</span></div>
-            <div>Active Sheriff Badges: <span className="font-bold">{players.filter(p => p.hasSheriffBadge).length}</span></div>
+      {/* Tournament Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+        <div className="card p-6">
+          <div className="text-[#94a3b8] text-sm font-semibold uppercase tracking-wider mb-2">
+            Tournament Progress
+          </div>
+          <div className="text-2xl font-bold text-[#e2e8f0]">
+            Round {currentRound} / {totalRounds}
+          </div>
+          <div className="text-sm text-[#94a3b8] mt-1">
+            {Math.max(0, totalRounds - currentRound)} rounds remaining
           </div>
         </div>
 
-        <div className="bg-gray-800 rounded-lg p-4">
-          <h3 className="text-lg font-semibold mb-2">Protection Legend</h3>
-          <div className="space-y-1 text-sm">
-            <div><span className="text-blue-400">Blue</span>: U10 (lose 1/4)</div>
-            <div><span className="text-green-400">Green</span>: U16 (lose 1/3)</div>
-            <div><span className="text-pink-400">Pink</span>: Women (lose 1/3)</div>
+        <div className="card p-6">
+          <div className="text-[#94a3b8] text-sm font-semibold uppercase tracking-wider mb-2">
+            Total Players
+          </div>
+          <div className="text-2xl font-bold text-[#e2e8f0]">
+            {players.length}
+          </div>
+          <div className="text-sm text-[#94a3b8] mt-1">
+            {players.filter(p => p.hasSheriffBadge).length} with Sheriff Badge
           </div>
         </div>
 
-        <div className="bg-gray-800 rounded-lg p-4">
-          <h3 className="text-lg font-semibold mb-2">Criminal Status</h3>
-          <div className="space-y-1 text-sm">
-            <div><span className="text-green-400">●</span> Normal</div>
-            <div><span className="text-orange-400">●</span> Angry (1 sheriff used)</div>
-            <div><span className="text-red-400">●</span> Mad (2+ sheriffs, immune)</div>
+        <div className="card p-6">
+          <div className="text-[#94a3b8] text-sm font-semibold uppercase tracking-wider mb-2">
+            Criminal Status
+          </div>
+          <div className="flex gap-3 mt-2">
+            <span className="badge badge-success">
+              {players.filter(p => p.criminalStatus === 'normal').length} Normal
+            </span>
+            <span className="badge badge-warning">
+              {players.filter(p => p.criminalStatus === 'angry').length} Angry
+            </span>
+            <span className="badge badge-danger">
+              {players.filter(p => p.criminalStatus === 'mad').length} Mad
+            </span>
           </div>
         </div>
       </div>
     </div>
   );
 }
-
