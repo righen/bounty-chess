@@ -80,7 +80,7 @@ export function calculateBountyTransfer(
   // Calculate base bounty loss for loser
   let bountyLoss = calculateNormalBountyLoss(loser, roundNumber);
 
-  // Winner used sheriff - steal 1.5x (unless loser is mad)
+  // Winner used sheriff - steal 1.2x (unless loser is mad)
   if (winnerUsedSheriff) {
     // Mad criminals are immune to opponent's sheriff effects
     if (loser.criminalStatus === 'mad') {
@@ -96,8 +96,8 @@ export function calculateBountyTransfer(
       };
     }
     
-    // Sheriff works - steal 1.5x
-    const boostedLoss = Math.floor(bountyLoss * 1.5);
+    // Sheriff works - steal 1.2x
+    const boostedLoss = Math.floor(bountyLoss * 1.2);
     
     // Update loser's criminal status (sheriff was used against them)
     const newLoserStatus = updateCriminalStatus(loser.criminalStatus);
@@ -135,8 +135,8 @@ function calculateNormalBountyLoss(loser: Player, roundNumber: number): number {
 
   // Apply protection rules for first 5 rounds only
   if (roundNumber <= 5) {
-    // U10 protection - lose only 1/4 (first 5 rounds)
-    if (loser.age < 10) {
+    // U12 protection - lose only 1/4 (first 5 rounds)
+    if (loser.age < 12) {
       lossMultiplier = 0.25;
     }
     // Women and U16 protection - lose only 1/3 (first 5 rounds)

@@ -66,7 +66,7 @@ Your tournament will be live at: `https://your-project.vercel.app` 🎉
 ### Bounty Transfer Rules
 - **Winner steals half** of loser's bounty (rounded down)
 - **Special Protections** (first 5 rounds only):
-  - **Children U10**: lose only **1/4** of bounty
+  - **Children U12**: lose only **1/4** of bounty
   - **Children U16**: lose only **1/3** of bounty  
   - **Women**: lose only **1/3** of bounty
 - **If bounty ≤ 2**: lose everything on loss
@@ -76,7 +76,7 @@ Your tournament will be live at: `https://your-project.vercel.app` 🎉
 ### Sheriff Protection Badge (One-time use)
 - ✅ **Declare before game starts**
 - 🛡️ **On loss**: no bounty lost
-- ⚡ **On win**: steal **1.5x** the normal amount
+- ⚡ **On win**: steal **1.2x** the normal amount
 - 🔄 **If both use**: badges cancel out (normal game, both badges consumed)
 - 🤬 **Mad criminal immunity**: Mad criminals are immune to opponent's sheriff protection
 - ⏰ **Worthless after round 9**

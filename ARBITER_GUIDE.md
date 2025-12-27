@@ -56,7 +56,7 @@ For each completed game:
 
 ### Sheriff Badge Rules
 - ✅ **Both use**: Badges cancel, normal game
-- ✅ **Winner uses**: Steals 1.5x bounty, opponent becomes Angry/Mad
+- ✅ **Winner uses**: Steals 1.2x bounty, opponent becomes Angry/Mad
 - ✅ **Loser uses**: No bounty lost, winner becomes Angry/Mad
 - ❌ **After Round 9**: Badges don't work anymore
 
@@ -65,8 +65,8 @@ For each completed game:
 - 🟠 **Angry**: 1 sheriff used against them
 - 🔴 **Mad**: 2+ sheriffs used, immune to opponent's sheriff
 
-### Protection Rules (Rounds 1-7 ONLY)
-- 🔵 **U10** (Blue): Lose 1/4 of bounty instead of 1/2
+### Protection Rules (Rounds 1-5 ONLY)
+- 🔵 **U12** (Blue): Lose 1/4 of bounty instead of 1/2
 - 🟢 **U16** (Green): Lose 1/3 of bounty instead of 1/2
 - 🌸 **Women** (Pink): Lose 1/3 of bounty instead of 1/2
 

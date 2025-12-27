@@ -1,9 +1,25 @@
 # ✅ RULE UPDATES IMPLEMENTED
-## December 27, 2025
+## December 27, 2025 - LATEST
 
 ---
 
-## 🎯 **CHANGES IMPLEMENTED**
+## 🔥 **FINAL RULE ADJUSTMENTS (Applied December 27, 2025 - 11:00 PM)**
+
+### ✅ **Sheriff Steal Multiplier: 1.5x → 1.2x**
+- **Old Rule**: Winner using sheriff badge steals 1.5x the normal amount
+- **New Rule**: Winner using sheriff badge steals **1.2x** the normal amount
+- **Code Location**: `lib/bounty.ts` line 100
+- **Example**: Normal steal would be 10₱ → With sheriff: 12₱ (instead of 15₱)
+
+### ✅ **Child Protection Age: U10 → U12**
+- **Old Rule**: Children under 10 lose only 1/4 of bounty (first 5 rounds)
+- **New Rule**: Children **under 12** lose only 1/4 of bounty (first 5 rounds)
+- **Code Location**: `lib/bounty.ts` line 139
+- **Affected Players**: Now includes 10 and 11 year olds in protection
+
+---
+
+## 🎯 **PREVIOUS CHANGES IMPLEMENTED**
 
 All critical rule corrections have been successfully implemented based on the official Facebook tournament post.
 
