@@ -16,13 +16,13 @@ export default function RoundManager({ state, onStateUpdate, onBackToLeaderboard
   if (!currentRound) {
     return (
       <div className="max-w-4xl mx-auto text-center">
-        <div className="bg-gray-800 rounded-lg p-8">
-          <h2 className="text-2xl font-bold mb-4">No Active Round</h2>
+        <div className="bg-white rounded-lg p-8 shadow-xl border border-gray-200">
+          <h2 className="text-2xl font-bold mb-4 text-brand-primary">No Active Round</h2>
           <button
             onClick={onBackToLeaderboard}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded"
+            className="bg-brand-secondary hover:bg-yellow-500 text-brand-primary font-bold py-3 px-6 rounded-lg transition-all active:scale-95 shadow-md"
           >
-            Back to Leaderboard
+            ← Back to Leaderboard
           </button>
         </div>
       </div>
@@ -47,43 +47,43 @@ export default function RoundManager({ state, onStateUpdate, onBackToLeaderboard
     <div className="max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-bold">Round {currentRound.number}</h2>
-          <p className="text-gray-400">
+          <h2 className="text-3xl font-bold text-brand-primary">♟️ Round {currentRound.number}</h2>
+          <p className="text-gray-600 text-lg">
             {completedGames} of {totalGames} games completed
           </p>
         </div>
         <button
           onClick={onBackToLeaderboard}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded"
+          className="bg-brand-quinary hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-all active:scale-95 shadow-md"
         >
-          Back to Leaderboard
+          ← Back to Leaderboard
         </button>
       </div>
 
       {/* Progress bar */}
-      <div className="mb-6 bg-gray-700 rounded-full h-4 overflow-hidden">
+      <div className="mb-6 bg-gray-200 rounded-full h-4 overflow-hidden shadow-inner">
         <div
-          className="bg-green-600 h-full transition-all duration-300"
+          className="bg-brand-secondary h-full transition-all duration-300"
           style={{ width: `${progress}%` }}
         />
       </div>
 
       {currentRound.completed && (
-        <div className="mb-6 p-4 bg-green-900/50 border border-green-700 rounded text-green-200 text-center">
+        <div className="mb-6 p-4 bg-green-50 border-2 border-green-300 rounded-lg text-green-800 text-center font-semibold text-lg">
           ✓ Round {currentRound.number} Complete! Go back to leaderboard to start the next round.
         </div>
       )}
 
       {/* Bye notification */}
       {byeGames.length > 0 && (
-        <div className="mb-6 p-4 bg-blue-900/50 border border-blue-700 rounded">
-          <h3 className="font-semibold text-blue-200 mb-2">🎯 Players with BYE (automatic win, no bounty gain):</h3>
+        <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+          <h3 className="font-semibold text-blue-900 mb-2 text-lg">🎯 Players with BYE (automatic win, no bounty gain):</h3>
           <div className="flex flex-wrap gap-2">
             {byeGames.map(game => {
               const player = state.players.find(p => p.id === game.whitePlayerId);
               if (!player) return null;
               return (
-                <div key={game.id} className="bg-blue-800 px-3 py-1 rounded text-blue-100">
+                <div key={game.id} className="bg-blue-100 px-3 py-1 rounded text-blue-900 font-semibold">
                   {player.name} {player.surname} (ID: {player.id})
                 </div>
               );
@@ -114,15 +114,15 @@ export default function RoundManager({ state, onStateUpdate, onBackToLeaderboard
       </div>
 
       {/* Printable pairings */}
-      <div className="mt-8 bg-gray-800 rounded-lg p-6 print:bg-white print:text-black print:p-8">
+      <div className="mt-8 bg-white rounded-lg p-6 shadow-xl border border-gray-200 print:shadow-none print:border-none">
         <div className="flex justify-between items-center mb-6 print:mb-8">
           <div>
-            <h3 className="text-2xl font-bold print:text-3xl print:text-black">Round {currentRound.number} - Pairings</h3>
-            <p className="text-gray-400 print:text-gray-700 mt-1">Total Games: {regularGames.length} • BYEs: {byeGames.length}</p>
+            <h3 className="text-2xl font-bold text-brand-primary print:text-3xl">Round {currentRound.number} - Pairings</h3>
+            <p className="text-gray-600 mt-1 print:text-gray-700">Total Games: {regularGames.length} • BYEs: {byeGames.length}</p>
           </div>
           <button
             onClick={() => window.print()}
-            className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded font-semibold print:hidden"
+            className="bg-brand-secondary hover:bg-yellow-500 text-brand-primary px-6 py-3 rounded-lg font-bold transition-all active:scale-95 shadow-md print:hidden"
           >
             🖨️ Print Pairings
           </button>
@@ -131,10 +131,10 @@ export default function RoundManager({ state, onStateUpdate, onBackToLeaderboard
         {/* Table format for easy reading */}
         <table className="w-full border-collapse print:text-lg">
           <thead>
-            <tr className="bg-gray-700 print:bg-gray-200">
-              <th className="border border-gray-600 print:border-black px-4 py-3 text-left print:text-black font-bold">Board</th>
-              <th className="border border-gray-600 print:border-black px-4 py-3 text-left print:text-black font-bold">⬜ White Player</th>
-              <th className="border border-gray-600 print:border-black px-4 py-3 text-left print:text-black font-bold">⬛ Black Player</th>
+            <tr className="bg-gray-100 print:bg-gray-200">
+              <th className="border-2 border-gray-300 print:border-black px-4 py-3 text-left text-gray-800 font-bold">Board</th>
+              <th className="border-2 border-gray-300 print:border-black px-4 py-3 text-left text-gray-800 font-bold">⬜ White Player</th>
+              <th className="border-2 border-gray-300 print:border-black px-4 py-3 text-left text-gray-800 font-bold">⬛ Black Player</th>
             </tr>
           </thead>
           <tbody>
@@ -145,23 +145,23 @@ export default function RoundManager({ state, onStateUpdate, onBackToLeaderboard
               if (!whitePlayer || !blackPlayer) return null;
 
               return (
-                <tr key={game.id} className="hover:bg-gray-750 print:hover:bg-white">
-                  <td className="border border-gray-600 print:border-black px-4 py-3 font-bold text-center print:text-black text-xl">
+                <tr key={game.id} className="hover:bg-gray-50">
+                  <td className="border-2 border-gray-300 print:border-black px-4 py-3 font-bold text-center text-brand-primary text-xl">
                     {index + 1}
                   </td>
-                  <td className="border border-gray-600 print:border-black px-4 py-3 print:text-black">
-                    <div className="font-semibold text-lg">
+                  <td className="border-2 border-gray-300 print:border-black px-4 py-3">
+                    <div className="font-semibold text-lg text-gray-800">
                       {whitePlayer.name} {whitePlayer.surname}
                     </div>
-                    <div className="text-sm text-gray-400 print:text-gray-600">
+                    <div className="text-sm text-gray-500">
                       ID: {whitePlayer.id} • Bounty: {whitePlayer.bounty}₱
                     </div>
                   </td>
-                  <td className="border border-gray-600 print:border-black px-4 py-3 print:text-black">
-                    <div className="font-semibold text-lg">
+                  <td className="border-2 border-gray-300 print:border-black px-4 py-3">
+                    <div className="font-semibold text-lg text-gray-800">
                       {blackPlayer.name} {blackPlayer.surname}
                     </div>
-                    <div className="text-sm text-gray-400 print:text-gray-600">
+                    <div className="text-sm text-gray-500">
                       ID: {blackPlayer.id} • Bounty: {blackPlayer.bounty}₱
                     </div>
                   </td>
@@ -174,12 +174,12 @@ export default function RoundManager({ state, onStateUpdate, onBackToLeaderboard
         {/* BYE section */}
         {byeGames.length > 0 && (
           <div className="mt-6 print:mt-8 print:border-t-2 print:border-black print:pt-6">
-            <h4 className="text-xl font-bold mb-3 text-blue-300 print:text-black">🎯 BYE (Automatic Win - No bounty gain)</h4>
+            <h4 className="text-xl font-bold mb-3 text-blue-900">🎯 BYE (Automatic Win - No bounty gain)</h4>
             <table className="w-full border-collapse print:text-lg">
               <thead>
-                <tr className="bg-blue-900/50 print:bg-gray-200">
-                  <th className="border border-blue-700 print:border-black px-4 py-3 text-left print:text-black font-bold">Player</th>
-                  <th className="border border-blue-700 print:border-black px-4 py-3 text-left print:text-black font-bold">Result</th>
+                <tr className="bg-blue-100 print:bg-gray-200">
+                  <th className="border-2 border-blue-300 print:border-black px-4 py-3 text-left text-gray-800 font-bold">Player</th>
+                  <th className="border-2 border-blue-300 print:border-black px-4 py-3 text-left text-gray-800 font-bold">Result</th>
                 </tr>
               </thead>
               <tbody>
@@ -187,16 +187,16 @@ export default function RoundManager({ state, onStateUpdate, onBackToLeaderboard
                   const player = state.players.find(p => p.id === game.whitePlayerId);
                   if (!player) return null;
                   return (
-                    <tr key={game.id} className="bg-blue-900/30 print:bg-white">
-                      <td className="border border-blue-700 print:border-black px-4 py-3 print:text-black">
-                        <div className="font-semibold text-lg">
+                    <tr key={game.id} className="bg-white">
+                      <td className="border-2 border-blue-300 print:border-black px-4 py-3">
+                        <div className="font-semibold text-lg text-gray-800">
                           {player.name} {player.surname}
                         </div>
-                        <div className="text-sm text-gray-400 print:text-gray-600">
+                        <div className="text-sm text-gray-500">
                           ID: {player.id} • Bounty: {player.bounty}₱
                         </div>
                       </td>
-                      <td className="border border-blue-700 print:border-black px-4 py-3 font-semibold text-green-400 print:text-green-700">
+                      <td className="border-2 border-blue-300 print:border-black px-4 py-3 font-semibold text-green-700">
                         Automatic Win (+1 Win, +0 Bounty)
                       </td>
                     </tr>
@@ -210,4 +210,3 @@ export default function RoundManager({ state, onStateUpdate, onBackToLeaderboard
     </div>
   );
 }
-

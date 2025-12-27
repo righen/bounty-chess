@@ -19,47 +19,47 @@ export default function GameCard({ game, whitePlayer, blackPlayer, roundNumber, 
 
   if (game.completed) {
     return (
-      <div className="bg-gray-800 rounded-lg p-4 border-2 border-green-700">
+      <div className="bg-white rounded-lg p-4 border-2 border-green-500 shadow-md">
         <div className="flex justify-between items-center mb-3">
-          <span className="text-sm text-gray-400">Game Complete</span>
-          <span className="text-green-400 font-bold">✓</span>
+          <span className="text-sm text-gray-600 font-semibold">Game Complete</span>
+          <span className="text-green-600 font-bold text-lg">✓</span>
         </div>
 
         <div className="space-y-3">
           {/* White Player */}
-          <div className={`p-3 rounded ${game.result === 'white' ? 'bg-green-900/50 border border-green-700' : 'bg-gray-700'}`}>
+          <div className={`p-3 rounded ${game.result === 'white' ? 'bg-green-50 border-2 border-green-500' : 'bg-gray-50 border border-gray-200'}`}>
             <div className="flex justify-between items-center">
               <div>
-                <div className="font-semibold">
+                <div className="font-semibold text-gray-800">
                   {whitePlayer.name} {whitePlayer.surname}
                   {game.sheriffUsage.white && <span className="ml-2">🛡️</span>}
                 </div>
-                <div className="text-sm text-gray-400">White • {formatBounty(whitePlayer.bounty)}</div>
+                <div className="text-sm text-gray-600">White • {formatBounty(whitePlayer.bounty)}</div>
               </div>
               {game.result === 'white' && <span className="text-2xl">👑</span>}
             </div>
           </div>
 
           {/* Black Player */}
-          <div className={`p-3 rounded ${game.result === 'black' ? 'bg-green-900/50 border border-green-700' : 'bg-gray-700'}`}>
+          <div className={`p-3 rounded ${game.result === 'black' ? 'bg-green-50 border-2 border-green-500' : 'bg-gray-50 border border-gray-200'}`}>
             <div className="flex justify-between items-center">
               <div>
-                <div className="font-semibold">
+                <div className="font-semibold text-gray-800">
                   {blackPlayer.name} {blackPlayer.surname}
                   {game.sheriffUsage.black && <span className="ml-2">🛡️</span>}
                 </div>
-                <div className="text-sm text-gray-400">Black • {formatBounty(blackPlayer.bounty)}</div>
+                <div className="text-sm text-gray-600">Black • {formatBounty(blackPlayer.bounty)}</div>
               </div>
               {game.result === 'black' && <span className="text-2xl">👑</span>}
             </div>
           </div>
 
           {game.result === 'draw' && (
-            <div className="text-center text-gray-400 text-sm">Draw - No bounty transfer</div>
+            <div className="text-center text-gray-600 text-sm font-semibold">Draw - No bounty transfer</div>
           )}
 
           {game.bountyTransfer > 0 && (
-            <div className="text-center text-yellow-400 font-bold">
+            <div className="text-center text-brand-secondary font-bold text-lg">
               Bounty Transfer: {formatBounty(game.bountyTransfer)}
             </div>
           )}
@@ -78,14 +78,14 @@ export default function GameCard({ game, whitePlayer, blackPlayer, roundNumber, 
   };
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4 border-2 border-gray-700 hover:border-gray-600">
+    <div className="bg-white rounded-lg p-4 border-2 border-gray-200 hover:border-brand-secondary transition-colors shadow-md">
       <div className="space-y-3">
         {/* White Player */}
-        <div className="bg-gray-700 p-3 rounded">
+        <div className="bg-gray-50 p-3 rounded border border-gray-200">
           <div className="flex justify-between items-start mb-2">
             <div>
-              <div className="font-semibold">{whitePlayer.name} {whitePlayer.surname}</div>
-              <div className="text-sm text-gray-400">
+              <div className="font-semibold text-gray-800">{whitePlayer.name} {whitePlayer.surname}</div>
+              <div className="text-sm text-gray-600">
                 White • {formatBounty(whitePlayer.bounty)} • Age {whitePlayer.age} {whitePlayer.gender}
               </div>
               <div className="text-xs mt-1">
@@ -102,22 +102,22 @@ export default function GameCard({ game, whitePlayer, blackPlayer, roundNumber, 
                 type="checkbox"
                 checked={sheriffWhite}
                 onChange={(e) => setSheriffWhite(e.target.checked)}
-                className="w-4 h-4"
+                className="w-5 h-5 accent-brand-secondary"
               />
-              <span className="text-sm">Use Sheriff Badge 🛡️</span>
+              <span className="text-sm font-semibold text-gray-700">Use Sheriff Badge 🛡️</span>
             </label>
           )}
           {!canWhiteUseSheriff && whitePlayer.hasSheriffBadge && roundNumber > 9 && (
-            <div className="text-xs text-gray-500">Badge expired (Round 9+)</div>
+            <div className="text-xs text-gray-500 font-semibold">Badge expired (Round 9+)</div>
           )}
         </div>
 
         {/* Black Player */}
-        <div className="bg-gray-700 p-3 rounded">
+        <div className="bg-gray-50 p-3 rounded border border-gray-200">
           <div className="flex justify-between items-start mb-2">
             <div>
-              <div className="font-semibold">{blackPlayer.name} {blackPlayer.surname}</div>
-              <div className="text-sm text-gray-400">
+              <div className="font-semibold text-gray-800">{blackPlayer.name} {blackPlayer.surname}</div>
+              <div className="text-sm text-gray-600">
                 Black • {formatBounty(blackPlayer.bounty)} • Age {blackPlayer.age} {blackPlayer.gender}
               </div>
               <div className="text-xs mt-1">
@@ -134,13 +134,13 @@ export default function GameCard({ game, whitePlayer, blackPlayer, roundNumber, 
                 type="checkbox"
                 checked={sheriffBlack}
                 onChange={(e) => setSheriffBlack(e.target.checked)}
-                className="w-4 h-4"
+                className="w-5 h-5 accent-brand-secondary"
               />
-              <span className="text-sm">Use Sheriff Badge 🛡️</span>
+              <span className="text-sm font-semibold text-gray-700">Use Sheriff Badge 🛡️</span>
             </label>
           )}
           {!canBlackUseSheriff && blackPlayer.hasSheriffBadge && roundNumber > 9 && (
-            <div className="text-xs text-gray-500">Badge expired (Round 9+)</div>
+            <div className="text-xs text-gray-500 font-semibold">Badge expired (Round 9+)</div>
           )}
         </div>
 
@@ -148,22 +148,22 @@ export default function GameCard({ game, whitePlayer, blackPlayer, roundNumber, 
         <div className="grid grid-cols-3 gap-2 pt-2">
           <button
             onClick={() => handleSubmit('white')}
-            className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-3 rounded text-sm
-              transition-colors"
+            className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-3 rounded-lg text-sm
+              transition-all active:scale-95 shadow-md"
           >
             White Wins
           </button>
           <button
             onClick={() => handleSubmit('draw')}
-            className="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-3 rounded text-sm
-              transition-colors"
+            className="bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 px-3 rounded-lg text-sm
+              transition-all active:scale-95 shadow-md"
           >
             Draw
           </button>
           <button
             onClick={() => handleSubmit('black')}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded text-sm
-              transition-colors"
+            className="bg-brand-quinary hover:bg-purple-700 text-white font-bold py-3 px-3 rounded-lg text-sm
+              transition-all active:scale-95 shadow-md"
           >
             Black Wins
           </button>
@@ -172,4 +172,3 @@ export default function GameCard({ game, whitePlayer, blackPlayer, roundNumber, 
     </div>
   );
 }
-

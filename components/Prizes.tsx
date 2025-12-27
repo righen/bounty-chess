@@ -83,25 +83,25 @@ export default function Prizes({ players, currentRound, totalRounds }: PrizesPro
 
   const renderPlayerCard = (player: Player | undefined, label: string, prize: string) => {
     if (!player) return (
-      <div className="bg-gray-800 rounded-lg p-4 border-2 border-gray-700">
-        <div className="text-sm text-gray-400 mb-2">{prize}</div>
-        <div className="font-bold text-lg mb-1">{label}</div>
-        <div className="text-gray-500">-</div>
+      <div className="bg-white rounded-lg p-4 border-2 border-gray-300 shadow-sm">
+        <div className="text-sm text-gray-500 mb-2">{prize}</div>
+        <div className="font-bold text-lg mb-1 text-gray-800">{label}</div>
+        <div className="text-gray-400">-</div>
       </div>
     );
 
     return (
-      <div className="bg-gray-800 rounded-lg p-4 border-2 border-yellow-600 hover:border-yellow-500 transition-colors">
-        <div className="text-sm text-yellow-400 mb-2 font-semibold">{prize}</div>
-        <div className="font-bold text-lg mb-1">{label}</div>
+      <div className="bg-white rounded-lg p-4 border-2 border-brand-secondary hover:border-yellow-500 transition-colors shadow-md">
+        <div className="text-sm text-brand-secondary mb-2 font-semibold">{prize}</div>
+        <div className="font-bold text-lg mb-1 text-brand-primary">{label}</div>
         <div className="flex items-center justify-between">
           <div>
-            <div className="text-white font-semibold">{player.name} {player.surname}</div>
-            <div className="text-sm text-gray-400">ID: {player.id} • Age: {player.age} {player.gender}</div>
+            <div className="text-gray-800 font-semibold">{player.name} {player.surname}</div>
+            <div className="text-sm text-gray-500">ID: {player.id} • Age: {player.age} {player.gender}</div>
           </div>
           <div className="text-right">
-            <div className="text-yellow-400 font-bold text-xl">{formatBounty(player.bounty)}</div>
-            <div className="text-sm text-gray-400">{player.wins}W-{player.losses}L-{player.draws}D</div>
+            <div className="text-brand-secondary font-bold text-xl">{formatBounty(player.bounty)}</div>
+            <div className="text-sm text-gray-500">{player.wins}W-{player.losses}L-{player.draws}D</div>
           </div>
         </div>
       </div>
@@ -110,15 +110,15 @@ export default function Prizes({ players, currentRound, totalRounds }: PrizesPro
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="bg-gray-800 rounded-lg p-6 shadow-xl mb-6">
-        <h2 className="text-3xl font-bold mb-2 text-center">🏆 Trophies & Medals</h2>
-        <p className="text-center text-gray-400 mb-6">
+      <div className="bg-white rounded-lg p-6 shadow-xl border border-gray-200 mb-6">
+        <h2 className="text-3xl font-bold mb-2 text-center text-brand-primary">🏆 Trophies & Medals</h2>
+        <p className="text-center text-gray-600 mb-6 text-lg">
           {currentRound === totalRounds ? 'Final Results' : `Preview (Tournament in progress - Round ${currentRound}/${totalRounds})`}
         </p>
 
         {/* Top Trophies */}
         <div className="mb-8">
-          <h3 className="text-xl font-semibold mb-4 text-yellow-400">🏆 Main Trophies</h3>
+          <h3 className="text-xl font-semibold mb-4 text-brand-secondary">🏆 Main Trophies</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {renderPlayerCard(greatestCriminal, 'Greatest Criminals', '🥇 Trophy Winner')}
             {renderPlayerCard(secondGreatest, 'Greatest Criminals', '🥈 Trophy 2nd Winner')}
@@ -127,7 +127,7 @@ export default function Prizes({ players, currentRound, totalRounds }: PrizesPro
 
         {/* Bronze Medals */}
         <div className="mb-8">
-          <h3 className="text-xl font-semibold mb-4 text-orange-400">🥉 Bronze Medals</h3>
+          <h3 className="text-xl font-semibold mb-4 text-orange-600">🥉 Bronze Medals</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {renderPlayerCard(thirdGreatest, 'Great Criminal 1', '🥉 Bronze')}
             {renderPlayerCard(fourthGreatest, 'Great Criminal 2', '🥉 Bronze')}
@@ -137,7 +137,7 @@ export default function Prizes({ players, currentRound, totalRounds }: PrizesPro
 
         {/* Special Trophies */}
         <div className="mb-8">
-          <h3 className="text-xl font-semibold mb-4 text-pink-400">👑 Special Categories</h3>
+          <h3 className="text-xl font-semibold mb-4 text-pink-600">👑 Special Categories</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {renderPlayerCard(mostDangerousLady, 'Most Dangerous Lady', '🏆 Trophy')}
             {renderPlayerCard(youngestPlayer, 'Too young to be a criminal', '📌 Pins')}
@@ -151,7 +151,7 @@ export default function Prizes({ players, currentRound, totalRounds }: PrizesPro
 
         {/* Gold Medals (Age Categories) */}
         <div className="mb-8">
-          <h3 className="text-xl font-semibold mb-4 text-yellow-300">🥇 Gold Medals (Age Categories)</h3>
+          <h3 className="text-xl font-semibold mb-4 text-brand-secondary">🥇 Gold Medals (Age Categories)</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {renderPlayerCard(bornKillerBoy, 'Born killer (U12 Boy challenge)', '🥇 Gold Medal')}
             {renderPlayerCard(bornKillerGirl, 'Born killer (U12 Girl challenge)', '🥇 Gold Medal')}
@@ -161,8 +161,8 @@ export default function Prizes({ players, currentRound, totalRounds }: PrizesPro
         </div>
 
         {/* Participation */}
-        <div className="bg-blue-900/30 border-2 border-blue-700 rounded-lg p-4 text-center">
-          <div className="text-blue-200 font-semibold text-lg">
+        <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 text-center">
+          <div className="text-blue-900 font-semibold text-lg">
             🎖️ Participation Pin: All {players.length} players receive 70 pins
           </div>
         </div>

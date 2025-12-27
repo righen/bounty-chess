@@ -126,17 +126,17 @@ export default function PlayerManager({ players, onPlayersUpdate, tournamentStar
   };
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6">
       {/* Add/Edit Form */}
       {isAdding ? (
-        <div className="bg-gray-800 rounded-lg p-6 shadow-xl">
-          <h3 className="text-xl font-bold mb-4">
-            {editingId ? 'Edit Player' : 'Add New Player'}
+        <div className="bg-white rounded-lg p-6 shadow-xl border border-gray-200">
+          <h3 className="text-2xl font-bold mb-6 text-brand-primary">
+            {editingId ? '✏️ Edit Player' : '➕ Add New Player'}
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="block text-sm font-semibold mb-2 text-gray-700">
                 Player Number (auto-generated if empty)
               </label>
               <input
@@ -144,80 +144,80 @@ export default function PlayerManager({ players, onPlayersUpdate, tournamentStar
                 value={formData.id}
                 onChange={(e) => setFormData({ ...formData, id: e.target.value })}
                 disabled={editingId !== null}
-                className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white
-                  focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 bg-gray-50 border-2 border-gray-200 rounded-lg text-gray-800
+                  focus:outline-none focus:ring-2 focus:ring-brand-secondary disabled:bg-gray-100"
                 placeholder="Auto"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="block text-sm font-semibold mb-2 text-gray-700">
                 First Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white
-                  focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 bg-gray-50 border-2 border-gray-200 rounded-lg text-gray-800
+                  focus:outline-none focus:ring-2 focus:ring-brand-secondary"
                 placeholder="e.g., John"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="block text-sm font-semibold mb-2 text-gray-700">
                 Last Name <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={formData.surname}
                 onChange={(e) => setFormData({ ...formData, surname: e.target.value })}
-                className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white
-                  focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 bg-gray-50 border-2 border-gray-200 rounded-lg text-gray-800
+                  focus:outline-none focus:ring-2 focus:ring-brand-secondary"
                 placeholder="e.g., Doe"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
-                Birth Date (DD/MM/YYYY) <span className="text-yellow-500 text-xs">(Optional - can be added later)</span>
+              <label className="block text-sm font-semibold mb-2 text-gray-700">
+                Birth Date (DD/MM/YYYY) <span className="text-brand-quinary text-xs">(Optional)</span>
               </label>
               <input
                 type="text"
                 value={formData.birthdate}
                 onChange={(e) => setFormData({ ...formData, birthdate: e.target.value })}
-                className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white
-                  focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 bg-gray-50 border-2 border-gray-200 rounded-lg text-gray-800
+                  focus:outline-none focus:ring-2 focus:ring-brand-secondary"
                 placeholder="e.g., 15/05/2000"
               />
-              <p className="text-xs text-gray-400 mt-1">
-                💡 Leave empty if unknown. Age-based protections won't apply until birthdate is added.
+              <p className="text-xs text-gray-500 mt-1">
+                💡 Leave empty if unknown. Can be added later.
               </p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="block text-sm font-semibold mb-2 text-gray-700">
                 Address
               </label>
               <input
                 type="text"
                 value={formData.currentAddress}
                 onChange={(e) => setFormData({ ...formData, currentAddress: e.target.value })}
-                className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white
-                  focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 bg-gray-50 border-2 border-gray-200 rounded-lg text-gray-800
+                  focus:outline-none focus:ring-2 focus:ring-brand-secondary"
                 placeholder="e.g., Quatre Bornes"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="block text-sm font-semibold mb-2 text-gray-700">
                 Meal Preference
               </label>
               <select
                 value={formData.meal}
                 onChange={(e) => setFormData({ ...formData, meal: e.target.value })}
-                className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white
-                  focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 bg-gray-50 border-2 border-gray-200 rounded-lg text-gray-800
+                  focus:outline-none focus:ring-2 focus:ring-brand-secondary"
               >
                 <option value="">Normal</option>
                 <option value="Normal">Normal</option>
@@ -227,14 +227,14 @@ export default function PlayerManager({ players, onPlayersUpdate, tournamentStar
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="block text-sm font-semibold mb-2 text-gray-700">
                 Gender <span className="text-red-500">*</span>
               </label>
               <select
                 value={formData.gender}
                 onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                className="w-full p-2 bg-gray-700 border border-gray-600 rounded text-white
-                  focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-3 bg-gray-50 border-2 border-gray-200 rounded-lg text-gray-800
+                  focus:outline-none focus:ring-2 focus:ring-brand-secondary"
               >
                 <option value="M">Male</option>
                 <option value="F">Female</option>
@@ -245,15 +245,15 @@ export default function PlayerManager({ players, onPlayersUpdate, tournamentStar
           <div className="flex gap-3 mt-6">
             <button
               onClick={editingId ? handleUpdate : handleAdd}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded
-                transition-colors"
+              className="flex-1 bg-brand-secondary hover:bg-yellow-500 text-brand-primary font-bold py-3 px-6 rounded-lg
+                transition-all active:scale-95 shadow-md"
             >
-              {editingId ? 'Update Player' : 'Add Player'}
+              {editingId ? '✓ Update Player' : '✓ Add Player'}
             </button>
             <button
               onClick={resetForm}
-              className="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-6 rounded
-                transition-colors"
+              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded-lg
+                transition-all active:scale-95"
             >
               Cancel
             </button>
@@ -264,27 +264,27 @@ export default function PlayerManager({ players, onPlayersUpdate, tournamentStar
           <button
             onClick={() => setIsAdding(true)}
             disabled={tournamentStarted}
-            className={`font-bold py-3 px-6 rounded transition-colors ${
+            className={`font-bold py-3 px-6 rounded-lg transition-all shadow-md ${
               tournamentStarted
-                ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                : 'bg-brand-secondary hover:bg-yellow-500 text-brand-primary active:scale-95'
             }`}
           >
-            + Add New Player
+            ➕ Add New Player
           </button>
         </div>
       )}
 
       {/* Warning for missing birthdates */}
       {playersWithoutBirthdate > 0 && !tournamentStarted && (
-        <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-4 mb-6">
+        <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <span className="text-2xl">⚠️</span>
             <div>
-              <h4 className="font-bold text-yellow-400 mb-1">
+              <h4 className="font-bold text-yellow-800 mb-1">
                 {playersWithoutBirthdate} {playersWithoutBirthdate === 1 ? 'player' : 'players'} missing birthdate
               </h4>
-              <p className="text-sm text-yellow-200">
+              <p className="text-sm text-yellow-700">
                 These players won't receive age-based bounty protections (U12, U16) until birthdates are added.
                 Click "Edit" to add missing birthdates before starting the tournament.
               </p>
@@ -294,12 +294,12 @@ export default function PlayerManager({ players, onPlayersUpdate, tournamentStar
       )}
 
       {/* Players List */}
-      <div className="bg-gray-800 rounded-lg overflow-hidden shadow-xl">
-        <div className="p-4 bg-gray-700 border-b border-gray-600">
-          <h3 className="text-lg font-bold">
+      <div className="bg-white rounded-lg overflow-hidden shadow-xl border border-gray-200">
+        <div className="p-4 bg-gray-100 border-b border-gray-200">
+          <h3 className="text-lg font-bold text-brand-primary">
             Players List ({players.length} players)
             {playersWithoutBirthdate > 0 && (
-              <span className="ml-2 text-sm text-yellow-400">
+              <span className="ml-2 text-sm text-yellow-600">
                 ({playersWithoutBirthdate} missing birthdate)
               </span>
             )}
@@ -307,19 +307,19 @@ export default function PlayerManager({ players, onPlayersUpdate, tournamentStar
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-700">
+          <table className="w-full text-sm text-gray-700">
+            <thead className="bg-gray-100 border-b border-gray-200">
               <tr>
-                <th className="px-4 py-3 text-left">ID</th>
-                <th className="px-4 py-3 text-left">Name</th>
-                <th className="px-4 py-3 text-left">Birth Date</th>
-                <th className="px-4 py-3 text-center">Age</th>
-                <th className="px-4 py-3 text-center">Category</th>
-                <th className="px-4 py-3 text-center">Gender</th>
-                <th className="px-4 py-3 text-left">Address</th>
-                <th className="px-4 py-3 text-left">Meal</th>
+                <th className="px-4 py-3 text-left font-bold text-gray-800">ID</th>
+                <th className="px-4 py-3 text-left font-bold text-gray-800">Name</th>
+                <th className="px-4 py-3 text-left font-bold text-gray-800">Birth Date</th>
+                <th className="px-4 py-3 text-center font-bold text-gray-800">Age</th>
+                <th className="px-4 py-3 text-center font-bold text-gray-800">Category</th>
+                <th className="px-4 py-3 text-center font-bold text-gray-800">Gender</th>
+                <th className="px-4 py-3 text-left font-bold text-gray-800">Address</th>
+                <th className="px-4 py-3 text-left font-bold text-gray-800">Meal</th>
                 {!tournamentStarted && (
-                  <th className="px-4 py-3 text-center">Actions</th>
+                  <th className="px-4 py-3 text-center font-bold text-gray-800">Actions</th>
                 )}
               </tr>
             </thead>
@@ -331,31 +331,27 @@ export default function PlayerManager({ players, onPlayersUpdate, tournamentStar
                   </td>
                 </tr>
               ) : (
-                players.map((player) => (
+                players.map((player, idx) => (
                   <tr
                     key={player.id}
-                    className="border-t border-gray-700 hover:bg-gray-700/50"
+                    className={`border-t border-gray-100 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors`}
                   >
-                    <td className="px-4 py-3 text-gray-400">{player.id}</td>
+                    <td className="px-4 py-3 text-gray-500">{player.id}</td>
                     <td className="px-4 py-3">
-                      <div className="font-semibold">{player.name} {player.surname}</div>
+                      <div className="font-semibold text-gray-800">{player.name} {player.surname}</div>
                     </td>
                     <td className="px-4 py-3 text-sm">
                       {player.birthdate ? (
-                        <span className="text-gray-400">{player.birthdate}</span>
+                        <span className="text-gray-600">{player.birthdate}</span>
                       ) : (
-                        <span className="text-yellow-500 flex items-center gap-1">
+                        <span className="text-yellow-600 flex items-center gap-1 font-semibold">
                           <span>⚠️</span>
-                          <span className="font-semibold">Missing</span>
+                          <span>Missing</span>
                         </span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <span className={`text-sm font-semibold ${
-                        player.age < 10 ? 'text-blue-400' :
-                        player.age < 16 ? 'text-green-400' :
-                        'text-gray-400'
-                      }`}>
+                      <span className="text-gray-600 font-semibold">
                         {player.age > 0 ? player.age : '-'}
                       </span>
                     </td>
@@ -365,20 +361,20 @@ export default function PlayerManager({ players, onPlayersUpdate, tournamentStar
                           {getAgeCategory(player.age).label}
                         </span>
                       ) : (
-                        <span className="text-gray-500">-</span>
+                        <span className="text-gray-400">-</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className={`text-sm font-semibold ${
-                        player.gender === 'F' ? 'text-pink-400' : 'text-blue-400'
+                        player.gender === 'F' ? 'text-pink-500' : 'text-blue-500'
                       }`}>
                         {player.gender === 'F' ? 'Female' : 'Male'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-400">
+                    <td className="px-4 py-3 text-sm text-gray-600">
                       {player.currentAddress || '-'}
                     </td>
-                    <td className="px-4 py-3 text-sm">
+                    <td className="px-4 py-3 text-sm text-gray-600">
                       {player.meal || 'Normal'}
                     </td>
                     {!tournamentStarted && (
@@ -386,15 +382,15 @@ export default function PlayerManager({ players, onPlayersUpdate, tournamentStar
                         <div className="flex gap-2 justify-center">
                           <button
                             onClick={() => handleEdit(player)}
-                            className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded
-                              transition-colors"
+                            className="px-3 py-1 bg-brand-quinary hover:bg-purple-700 text-white text-xs font-bold rounded
+                              transition-all active:scale-95"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDelete(player.id)}
-                            className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded
-                              transition-colors"
+                            className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded
+                              transition-all active:scale-95"
                           >
                             Delete
                           </button>
@@ -410,11 +406,10 @@ export default function PlayerManager({ players, onPlayersUpdate, tournamentStar
       </div>
 
       {tournamentStarted && (
-        <div className="bg-yellow-900/50 border border-yellow-700 rounded p-4 text-yellow-200 text-sm">
+        <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 text-yellow-800 text-sm font-semibold">
           ⚠️ Tournament has started. Player editing is disabled. Export data and restart to make changes.
         </div>
       )}
     </div>
   );
 }
-
