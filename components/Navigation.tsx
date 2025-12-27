@@ -5,9 +5,10 @@ interface NavigationProps {
   onViewChange: (view: 'setup' | 'leaderboard' | 'round' | 'players' | 'prizes') => void;
   onReset: () => void;
   onExport: () => void;
+  onImport: () => void;
 }
 
-export default function Navigation({ view, onViewChange, onReset, onExport }: NavigationProps) {
+export default function Navigation({ view, onViewChange, onReset, onExport, onImport }: NavigationProps) {
   return (
     <nav className="bg-gray-800 border-b border-gray-700">
       <div className="container mx-auto px-4">
@@ -57,10 +58,16 @@ export default function Navigation({ view, onViewChange, onReset, onExport }: Na
 
           <div className="flex space-x-2">
             <button
+              onClick={onImport}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded transition-colors"
+            >
+              📥 Import Data
+            </button>
+            <button
               onClick={onExport}
               className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors"
             >
-              Export Data
+              📤 Export Data
             </button>
             <button
               onClick={onReset}
