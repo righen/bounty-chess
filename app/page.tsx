@@ -215,7 +215,7 @@ export default function Home() {
       />
 
       {/* Main Content */}
-      <main className={`flex-1 w-full transition-all duration-300 ease-in-out ${sidebarOpen ? "lg:ml-[290px]" : ""}`}>
+      <main className={`flex-1 w-full transition-all duration-300 ease-in-out ${sidebarOpen ? "lg:pl-[290px]" : ""}`}>
         {/* Header */}
         <header className="sticky top-0 flex w-full bg-white border-gray-200 z-99999 border-b print:hidden">
           <div className="flex items-center justify-between grow p-4">
