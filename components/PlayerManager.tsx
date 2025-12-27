@@ -14,6 +14,9 @@ export default function PlayerManager({ players, onPlayersUpdate, tournamentStar
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   
+  // Count players without birthdates
+  const playersWithoutBirthdate = players.filter(p => !p.birthdate || p.birthdate.trim() === '').length;
+  
   // Form fields
   const [formData, setFormData] = useState({
     id: '',
@@ -177,7 +180,7 @@ export default function PlayerManager({ players, onPlayersUpdate, tournamentStar
 
             <div>
               <label className="block text-sm font-medium mb-2">
-                Birth Date (DD/MM/YYYY)
+                Birth Date (DD/MM/YYYY) <span className="text-yellow-500 text-xs">(Optional - can be added later)</span>
               </label>
               <input
                 type="text"
@@ -187,6 +190,9 @@ export default function PlayerManager({ players, onPlayersUpdate, tournamentStar
                   focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="e.g., 15/05/2000"
               />
+              <p className="text-xs text-gray-400 mt-1">
+                💡 Leave empty if unknown. Age-based protections won't apply until birthdate is added.
+              </p>
             </div>
 
             <div>
@@ -269,11 +275,34 @@ export default function PlayerManager({ players, onPlayersUpdate, tournamentStar
         </div>
       )}
 
+      {/* Warning for missing birthdates */}
+      {playersWithoutBirthdate > 0 && !tournamentStarted && (
+        <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-4 mb-6">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">⚠️</span>
+            <div>
+              <h4 className="font-bold text-yellow-400 mb-1">
+                {playersWithoutBirthdate} {playersWithoutBirthdate === 1 ? 'player' : 'players'} missing birthdate
+              </h4>
+              <p className="text-sm text-yellow-200">
+                These players won't receive age-based bounty protections (U12, U16) until birthdates are added.
+                Click "Edit" to add missing birthdates before starting the tournament.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Players List */}
       <div className="bg-gray-800 rounded-lg overflow-hidden shadow-xl">
         <div className="p-4 bg-gray-700 border-b border-gray-600">
           <h3 className="text-lg font-bold">
             Players List ({players.length} players)
+            {playersWithoutBirthdate > 0 && (
+              <span className="ml-2 text-sm text-yellow-400">
+                ({playersWithoutBirthdate} missing birthdate)
+              </span>
+            )}
           </h3>
         </div>
 
@@ -311,8 +340,15 @@ export default function PlayerManager({ players, onPlayersUpdate, tournamentStar
                     <td className="px-4 py-3">
                       <div className="font-semibold">{player.name} {player.surname}</div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-400">
-                      {player.birthdate || '-'}
+                    <td className="px-4 py-3 text-sm">
+                      {player.birthdate ? (
+                        <span className="text-gray-400">{player.birthdate}</span>
+                      ) : (
+                        <span className="text-yellow-500 flex items-center gap-1">
+                          <span>⚠️</span>
+                          <span className="font-semibold">Missing</span>
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span className={`text-sm font-semibold ${
