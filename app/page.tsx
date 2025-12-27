@@ -16,7 +16,7 @@ import PlayerImport from '@/components/PlayerImport';
 import PlayerManager from '@/components/PlayerManager';
 import Leaderboard from '@/components/Leaderboard';
 import RoundManager from '@/components/RoundManager';
-import Navigation from '@/components/Navigation';
+import Sidebar from '@/components/Sidebar';
 import Prizes from '@/components/Prizes';
 
 export default function Home() {
@@ -24,6 +24,7 @@ export default function Home() {
   const [view, setView] = useState<'setup' | 'leaderboard' | 'round' | 'players' | 'prizes'>('setup');
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Load state from Supabase on mount
   useEffect(() => {
@@ -191,84 +192,114 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
-        <div className="text-xl">Loading tournament state...</div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-xl text-gray-900">Loading tournament state...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0f1e]">
-      <header className="bg-[#1a1f2e] shadow-lg border-b border-[#2a2f3e] py-5 md:py-6 sticky top-0 z-50">
-        <div className="container-custom">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
-            <div className="text-center sm:text-left">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#e2e8f0]">
-                🎯 Bounty Chess
-              </h1>
-              {state && (
-                <p className="text-base md:text-lg text-[#94a3b8] mt-2">
-                  {state.players.length} Players • Round {state.currentRound}/{state.totalRounds}
-                </p>
-              )}
-            </div>
-            {syncing && (
-              <div className="badge badge-success gap-2 px-4 py-3">
-                <div className="animate-pulse text-lg">●</div>
-                <span className="font-semibold">Syncing...</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
-
-      <Navigation
+    <div className="min-h-screen flex">
+      {/* Sidebar */}
+      <Sidebar
+        sidebarOpen={sidebarOpen}
         view={view}
         onViewChange={setView}
         onReset={handleReset}
         onExport={handleExport}
         onImport={handleImport}
+        tournamentStarted={state?.tournamentStarted || false}
+        playersCount={state?.players.length || 0}
+        currentRound={state?.currentRound || 0}
+        totalRounds={state?.totalRounds || 9}
       />
 
-      <main className="container mx-auto px-4 py-8">
-        {!state && view === 'setup' && (
-          <PlayerImport onPlayersImported={handlePlayersImported} />
-        )}
+      {/* Main Content */}
+      <main className={`w-full transition-all duration-300 ease-in-out ${sidebarOpen ? "lg:pl-[290px]" : ""}`}>
+        {/* Header */}
+        <header className="sticky top-0 flex w-full bg-white border-gray-200 z-99999 border-b print:hidden">
+          <div className="flex items-center justify-between grow p-4">
+            <div className="flex items-center justify-between gap-2 sm:gap-4 lg:justify-normal lg:border-b-0">
+              {/* Hamburger Button */}
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="flex items-center justify-center w-11 h-11 text-gray-500 border border-gray-200 rounded-lg z-99999 cursor-pointer hover:bg-gray-50 transition-colors"
+              >
+                <svg className="w-[22px] h-[22px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+              
+              {/* Page Title */}
+              <h1 className="text-xl md:text-2xl font-semibold text-gray-900">
+                {view === 'players' && 'Manage Players'}
+                {view === 'leaderboard' && 'Leaderboard'}
+                {view === 'round' && 'Current Round'}
+                {view === 'prizes' && 'Prizes'}
+                {view === 'setup' && 'Import Players'}
+              </h1>
+            </div>
+            
+            <div className="items-center gap-4 flex justify-end relative overflow-hidden">
+              {syncing && (
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-green-50 text-green-700 text-sm">
+                  <div className="animate-pulse">●</div>
+                  <span className="font-semibold hidden sm:inline">Syncing...</span>
+                </div>
+              )}
+              
+              {state && (
+                <div className="hidden md:flex items-center gap-2 text-sm text-gray-600">
+                  <span className="font-semibold text-gray-900">{state.players.length}</span>
+                  <span>Players •</span>
+                  <span className="font-semibold text-gray-900">Round {state.currentRound}/{state.totalRounds}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
 
-        {state && view === 'players' && (
-          <PlayerManager
-            players={state.players}
-            onPlayersUpdate={handlePlayersUpdate}
-            tournamentStarted={state.tournamentStarted}
-          />
-        )}
+        {/* Content */}
+        <div className="p-2 lg:p-4">
+          {!state && view === 'setup' && (
+            <PlayerImport onPlayersImported={handlePlayersImported} />
+          )}
 
-        {state && view === 'leaderboard' && (
-          <Leaderboard
-            players={state.players}
-            currentRound={state.currentRound}
-            totalRounds={state.totalRounds}
-            tournamentStarted={state.tournamentStarted}
-            onStartTournament={handleStartTournament}
-            onGeneratePairing={handleGeneratePairing}
-          />
-        )}
+          {state && view === 'players' && (
+            <PlayerManager
+              players={state.players}
+              onPlayersUpdate={handlePlayersUpdate}
+              tournamentStarted={state.tournamentStarted}
+            />
+          )}
 
-        {state && view === 'round' && (
-          <RoundManager
-            state={state}
-            onStateUpdate={handleStateUpdate}
-            onBackToLeaderboard={() => setView('leaderboard')}
-          />
-        )}
+          {state && view === 'leaderboard' && (
+            <Leaderboard
+              players={state.players}
+              currentRound={state.currentRound}
+              totalRounds={state.totalRounds}
+              tournamentStarted={state.tournamentStarted}
+              onStartTournament={handleStartTournament}
+              onGeneratePairing={handleGeneratePairing}
+            />
+          )}
 
-        {state && view === 'prizes' && (
-          <Prizes
-            players={state.players}
-            currentRound={state.currentRound}
-            totalRounds={state.totalRounds}
-          />
-        )}
+          {state && view === 'round' && (
+            <RoundManager
+              state={state}
+              onStateUpdate={handleStateUpdate}
+              onBackToLeaderboard={() => setView('leaderboard')}
+            />
+          )}
+
+          {state && view === 'prizes' && (
+            <Prizes
+              players={state.players}
+              currentRound={state.currentRound}
+              totalRounds={state.totalRounds}
+            />
+          )}
+        </div>
       </main>
     </div>
   );
