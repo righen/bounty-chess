@@ -1,64 +1,184 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+import { TournamentState, Player } from '@/types';
+import { initializePlayers, parseCSV } from '@/lib/utils';
+import { 
+  loadTournamentState, 
+  saveTournamentState, 
+  initializeTournament,
+  startNewRound,
+  clearTournamentData,
+  exportTournamentData,
+} from '@/lib/store';
+import PlayerImport from '@/components/PlayerImport';
+import PlayerManager from '@/components/PlayerManager';
+import Leaderboard from '@/components/Leaderboard';
+import RoundManager from '@/components/RoundManager';
+import Navigation from '@/components/Navigation';
+import Prizes from '@/components/Prizes';
 
 export default function Home() {
+  const [state, setState] = useState<TournamentState | null>(null);
+  const [view, setView] = useState<'setup' | 'leaderboard' | 'round' | 'players' | 'prizes'>('setup');
+  const [loading, setLoading] = useState(true);
+
+  // Load state on mount
+  useEffect(() => {
+    const loaded = loadTournamentState();
+    if (loaded) {
+      // Migrate old states that don't have totalRounds or tournamentStarted
+      const migratedState = {
+        ...loaded,
+        totalRounds: loaded.totalRounds || 9,
+        tournamentStarted: loaded.tournamentStarted ?? (loaded.currentRound > 0),
+      };
+      setState(migratedState);
+      saveTournamentState(migratedState);
+      setView('leaderboard');
+    }
+    setLoading(false);
+  }, []);
+
+  // Save state whenever it changes
+  useEffect(() => {
+    if (state) {
+      saveTournamentState(state);
+    }
+  }, [state]);
+
+  const handlePlayersImported = (players: Player[]) => {
+    const newState = initializeTournament(players);
+    setState(newState);
+    setView('players');
+  };
+
+  const handlePlayersUpdate = (players: Player[]) => {
+    if (!state) {
+      const newState = initializeTournament(players);
+      setState(newState);
+    } else {
+      const updatedState = { ...state, players };
+      setState(updatedState);
+      saveTournamentState(updatedState);
+    }
+  };
+
+  const handleStartTournament = () => {
+    if (!state) return;
+    
+    const updatedState = {
+      ...state,
+      tournamentStarted: true,
+    };
+    setState(updatedState);
+    saveTournamentState(updatedState);
+  };
+
+  const handleGeneratePairing = () => {
+    if (!state) return;
+    
+    const newState = startNewRound(state);
+    setState(newState);
+    setView('round');
+  };
+
+  const handleStateUpdate = (newState: TournamentState) => {
+    setState(newState);
+  };
+
+  const handleReset = () => {
+    if (confirm('Are you sure you want to reset the tournament? This cannot be undone.')) {
+      clearTournamentData();
+      setState(null);
+      setView('setup');
+    }
+  };
+
+  const handleExport = () => {
+    if (!state) return;
+    
+    const data = exportTournamentData(state);
+    const blob = new Blob([data], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bounty-tournament-${new Date().toISOString()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen bg-gray-900 text-white">
+      <header className="bg-gray-800 border-b border-gray-700 p-4">
+        <div className="container mx-auto">
+          <h1 className="text-3xl font-bold text-center">
+            🎯 Bounty Chess Tournament
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+          {state && (
+            <p className="text-center text-gray-400 mt-2">
+              {state.players.length} Players • Round {state.currentRound} of {state.totalRounds}
+            </p>
+          )}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+      </header>
+
+      {state && (
+        <Navigation
+          view={view}
+          onViewChange={setView}
+          onReset={handleReset}
+          onExport={handleExport}
+        />
+      )}
+
+      <main className="container mx-auto p-4">
+        {!state && view === 'setup' && (
+          <PlayerImport onPlayersImported={handlePlayersImported} />
+        )}
+
+        {state && view === 'players' && (
+          <PlayerManager
+            players={state.players}
+            onPlayersUpdate={handlePlayersUpdate}
+            tournamentStarted={state.tournamentStarted}
+          />
+        )}
+
+        {state && view === 'leaderboard' && (
+          <Leaderboard
+            players={state.players}
+            currentRound={state.currentRound}
+            totalRounds={state.totalRounds}
+            tournamentStarted={state.tournamentStarted}
+            onStartTournament={handleStartTournament}
+            onGeneratePairing={handleGeneratePairing}
+          />
+        )}
+
+        {state && view === 'round' && (
+          <RoundManager
+            state={state}
+            onStateUpdate={handleStateUpdate}
+            onBackToLeaderboard={() => setView('leaderboard')}
+          />
+        )}
+
+        {state && view === 'prizes' && (
+          <Prizes
+            players={state.players}
+            currentRound={state.currentRound}
+            totalRounds={state.totalRounds}
+          />
+        )}
       </main>
     </div>
   );
