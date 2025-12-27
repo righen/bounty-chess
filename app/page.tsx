@@ -199,23 +199,23 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <header className="bg-gray-800 shadow-md py-4">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-center text-blue-400">
-                🎯 Bounty Chess Tournament
+      <header className="bg-gray-800 shadow-md py-4 md:py-6 sticky top-0 z-50">
+        <div className="container mx-auto px-3 sm:px-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-2">
+            <div className="text-center sm:text-left w-full sm:w-auto">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-blue-400">
+                🎯 Bounty Chess
               </h1>
               {state && (
-                <p className="text-center text-gray-400 mt-2">
-                  {state.players.length} Players • Round {state.currentRound} of {state.totalRounds}
+                <p className="text-base sm:text-lg text-gray-400 mt-1">
+                  {state.players.length} Players • Round {state.currentRound}/{state.totalRounds}
                 </p>
               )}
             </div>
             {syncing && (
-              <div className="flex items-center space-x-2 text-green-400 text-sm">
-                <div className="animate-pulse">●</div>
-                <span>Syncing...</span>
+              <div className="flex items-center space-x-2 text-green-400 text-base sm:text-sm bg-green-900/30 px-3 py-1 rounded-full">
+                <div className="animate-pulse text-lg">●</div>
+                <span className="font-semibold">Syncing...</span>
               </div>
             )}
           </div>

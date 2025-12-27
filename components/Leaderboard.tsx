@@ -2,6 +2,7 @@
 
 import { Player } from '@/types';
 import { formatBounty, getCriminalStatusColor, getAgeCategory } from '@/lib/utils';
+import LeaderboardMobile from './LeaderboardMobile';
 
 interface LeaderboardProps {
   players: Player[];
@@ -24,22 +25,25 @@ export default function Leaderboard({ players, currentRound, totalRounds, tourna
   const canGenerateNextRound = currentRound < totalRounds && tournamentStarted;
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
+    <div className="max-w-7xl mx-auto px-2 sm:px-4">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
-          <h2 className="text-2xl font-bold">Criminal Leaderboard</h2>
-          <p className="text-sm text-gray-400 mt-1">
-            Status: <span className={`font-semibold ${tournamentStarted ? 'text-green-400' : 'text-yellow-400'}`}>
-              {tournamentStarted ? 'Tournament Started' : 'Not Started Yet'}
+          <h2 className="text-2xl md:text-3xl font-bold text-blue-400">🏆 Leaderboard</h2>
+          <p className="text-base md:text-lg text-gray-400 mt-1">
+            <span className={`font-semibold ${tournamentStarted ? 'text-green-400' : 'text-yellow-400'}`}>
+              {tournamentStarted ? '✓ Started' : '⏸️ Not Started'}
             </span>
           </p>
         </div>
-        <div className="flex gap-3">
+        
+        {/* Action Buttons */}
+        <div className="w-full md:w-auto">
           {!tournamentStarted && (
             <button
               onClick={onStartTournament}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded
-                transition-colors text-lg shadow-lg"
+              className="w-full md:w-auto bg-green-600 hover:bg-green-700 active:scale-95 text-white font-bold 
+                py-4 px-8 rounded-lg transition-all text-lg shadow-lg"
             >
               🚀 Start Tournament
             </button>
@@ -47,34 +51,40 @@ export default function Leaderboard({ players, currentRound, totalRounds, tourna
           {tournamentStarted && canGenerateNextRound && (
             <button
               onClick={onGeneratePairing}
-              className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded
-                transition-colors shadow-lg"
+              className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold 
+                py-4 px-6 rounded-lg transition-all text-base md:text-lg shadow-lg"
             >
-              Generate Round {currentRound + 1} Pairing
+              ▶️ Generate Round {currentRound + 1}
             </button>
           )}
           {tournamentStarted && !canGenerateNextRound && (
-            <div className="text-xl font-bold text-yellow-400">
-              Tournament Complete!
+            <div className="text-lg md:text-xl font-bold text-yellow-400 text-center md:text-right">
+              🎉 Tournament Complete!
             </div>
           )}
         </div>
       </div>
 
-      <div className="bg-gray-800 rounded-lg overflow-hidden shadow-xl">
+      {/* Mobile View (Cards) */}
+      <div className="block md:hidden">
+        <LeaderboardMobile players={sortedPlayers} />
+      </div>
+
+      {/* Desktop View (Table) */}
+      <div className="hidden md:block bg-gray-800 rounded-lg overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full text-base">
             <thead className="bg-gray-700">
               <tr>
-                <th className="px-4 py-3 text-left">Rank</th>
-                <th className="px-4 py-3 text-left">ID</th>
-                <th className="px-4 py-3 text-left">Name</th>
-                <th className="px-4 py-3 text-center">Age</th>
-                <th className="px-4 py-3 text-center">Gender</th>
-                <th className="px-4 py-3 text-center">Bounty</th>
-                <th className="px-4 py-3 text-center">Record</th>
-                <th className="px-4 py-3 text-center">Sheriff Badge</th>
-                <th className="px-4 py-3 text-center">Status</th>
+                <th className="px-4 py-4 text-left text-base font-bold">Rank</th>
+                <th className="px-4 py-4 text-left text-base font-bold">ID</th>
+                <th className="px-4 py-4 text-left text-base font-bold">Name</th>
+                <th className="px-4 py-4 text-center text-base font-bold">Age</th>
+                <th className="px-4 py-4 text-center text-base font-bold">Gender</th>
+                <th className="px-4 py-4 text-center text-base font-bold">Bounty</th>
+                <th className="px-4 py-4 text-center text-base font-bold">Record</th>
+                <th className="px-4 py-4 text-center text-base font-bold">Sheriff</th>
+                <th className="px-4 py-4 text-center text-base font-bold">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -85,14 +95,14 @@ export default function Leaderboard({ players, currentRound, totalRounds, tourna
                     index < 2 ? 'bg-yellow-900/20' : ''
                   } hover:bg-gray-700/50`}
                 >
-                  <td className="px-4 py-3">
-                    <span className={`font-bold ${index < 2 ? 'text-yellow-400' : ''}`}>
+                  <td className="px-4 py-4">
+                    <span className={`text-xl font-bold ${index < 2 ? 'text-yellow-400' : 'text-gray-300'}`}>
                       #{index + 1}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-400">{player.id}</td>
-                  <td className="px-4 py-3">
-                    <div className="font-semibold">{player.name} {player.surname}</div>
+                  <td className="px-4 py-4 text-gray-400 text-base">{player.id}</td>
+                  <td className="px-4 py-4">
+                    <div className="font-semibold text-lg">{player.name} {player.surname}</div>
                     <div className="text-sm text-gray-400">{player.currentAddress}</div>
                   </td>
                   <td className="px-4 py-3 text-center">
