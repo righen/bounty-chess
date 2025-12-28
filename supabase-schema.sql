@@ -108,3 +108,6 @@ CREATE TRIGGER update_games_updated_at BEFORE UPDATE ON games
 
 -- Done! Your database is ready.
 
+
+
+

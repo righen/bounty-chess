@@ -2,6 +2,18 @@
 
 import { Player } from '@/types';
 import { formatBounty } from '@/lib/utils';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Chip,
+  Alert,
+} from '@mui/material';
+import {
+  EmojiEvents as TrophyIcon,
+  WorkspacePremium as MedalIcon,
+} from '@mui/icons-material';
 
 interface PrizesProps {
   players: Player[];
@@ -16,7 +28,7 @@ export default function Prizes({ players, currentRound, totalRounds }: PrizesPro
     return b.wins - a.wins;
   });
 
-  // Greatest Criminals (Top 3 by bounty)
+  // Greatest Criminals (Top 5 by bounty)
   const greatestCriminal = sortedByBounty[0];
   const secondGreatest = sortedByBounty[1];
   const thirdGreatest = sortedByBounty[2];
@@ -29,13 +41,13 @@ export default function Prizes({ players, currentRound, totalRounds }: PrizesPro
   // Youngest player
   const youngestPlayer = [...players].sort((a, b) => {
     if (!a.birthdate || !b.birthdate) return 0;
-    return b.birthdate.localeCompare(a.birthdate); // Most recent birthdate
+    return b.birthdate.localeCompare(a.birthdate);
   })[0];
 
   // Most draws
   const mostDraws = [...players].sort((a, b) => b.draws - a.draws)[0];
 
-  // Most consecutive wins (simplified: most wins)
+  // Fastest shooter (most wins)
   const fastestShooter = [...players].sort((a, b) => b.wins - a.wins)[0];
 
   // Perfect balance (closest to 20 pesos)
@@ -43,131 +55,152 @@ export default function Prizes({ players, currentRound, totalRounds }: PrizesPro
     return Math.abs(a.bounty - 20) - Math.abs(b.bounty - 20);
   })[0];
 
-  // U12 Boy challenge (highest bounty under 12, male)
+  // U12 challenges
   const u12Boys = players.filter(p => p.age < 12 && p.gender === 'M');
   const bornKillerBoy = u12Boys.sort((a, b) => {
     if (b.bounty !== a.bounty) return b.bounty - a.bounty;
     return b.wins - a.wins;
   })[0];
 
-  // U12 Girl challenge (highest bounty under 12, female)
   const u12Girls = players.filter(p => p.age < 12 && p.gender === 'F');
   const bornKillerGirl = u12Girls.sort((a, b) => {
     if (b.bounty !== a.bounty) return b.bounty - a.bounty;
     return b.wins - a.wins;
   })[0];
 
-  // U16 challenge (highest bounty under 16)
+  // U16 challenge
   const u16Players = players.filter(p => p.age < 16);
   const futureAssassin = u16Players.sort((a, b) => {
     if (b.bounty !== a.bounty) return b.bounty - a.bounty;
     return b.wins - a.wins;
   })[0];
 
-  // U18 challenge (highest bounty under 18)
+  // U18 challenge
   const u18Players = players.filter(p => p.age < 18);
   const youngKiller = u18Players.sort((a, b) => {
     if (b.bounty !== a.bounty) return b.bounty - a.bounty;
     return b.wins - a.wins;
   })[0];
 
-  // Untouchable (least defeats, then lowest bounty)
+  // Untouchable (least defeats)
   const untouchable = [...players].sort((a, b) => {
     if (a.losses !== b.losses) return a.losses - b.losses;
     return a.bounty - b.bounty;
   })[0];
 
-  // Best unknown player (highest bounty with no previous tournament experience - simplified as random mid-ranking)
+  // Best unknown player
   const unknownPlayers = sortedByBounty.slice(10, 20);
   const bestUnknown = unknownPlayers[0];
 
-  const renderPlayerCard = (player: Player | undefined, label: string, prize: string) => {
+  const renderPlayerCard = (player: Player | undefined, label: string, prize: string, color: 'primary' | 'secondary' | 'warning' | 'error' | 'info' = 'secondary') => {
     if (!player) return (
-      <div className="bg-white rounded-lg p-4 border-2 border-gray-300 shadow-sm">
-        <div className="text-sm text-gray-500 mb-2">{prize}</div>
-        <div className="font-bold text-lg mb-1 text-gray-800">{label}</div>
-        <div className="text-gray-400">-</div>
-      </div>
+      <Card elevation={1} sx={{ height: '100%' }}>
+        <CardContent>
+          <Chip label={prize} color={color} size="small" sx={{ mb: 1 }} />
+          <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
+            {label}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">-</Typography>
+        </CardContent>
+      </Card>
     );
 
     return (
-      <div className="bg-white rounded-lg p-4 border-2 border-brand-secondary hover:border-yellow-500 transition-colors shadow-md">
-        <div className="text-sm text-brand-secondary mb-2 font-semibold">{prize}</div>
-        <div className="font-bold text-lg mb-1 text-brand-primary">{label}</div>
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-gray-800 font-semibold">{player.name} {player.surname}</div>
-            <div className="text-sm text-gray-500">ID: {player.id} • Age: {player.age} {player.gender}</div>
-          </div>
-          <div className="text-right">
-            <div className="text-brand-secondary font-bold text-xl">{formatBounty(player.bounty)}</div>
-            <div className="text-sm text-gray-500">{player.wins}W-{player.losses}L-{player.draws}D</div>
-          </div>
-        </div>
-      </div>
+      <Card elevation={2} sx={{ height: '100%', '&:hover': { boxShadow: 4 } }}>
+        <CardContent>
+          <Chip label={prize} color={color} size="small" sx={{ mb: 1 }} />
+          <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mb: 1 }}>
+            {label}
+          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box>
+              <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                {player.name} {player.surname}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                ID: {player.id} • Age: {player.age} {player.gender}
+              </Typography>
+            </Box>
+            <Box sx={{ textAlign: 'right' }}>
+              <Typography variant="h6" sx={{ color: 'secondary.main', fontWeight: 'bold' }}>
+                {formatBounty(player.bounty)}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {player.wins}W-{player.losses}L-{player.draws}D
+              </Typography>
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
     );
   };
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="bg-white rounded-lg p-6 shadow-xl border border-gray-200 mb-6">
-        <h2 className="text-3xl font-bold mb-2 text-center text-brand-primary">🏆 Trophies & Medals</h2>
-        <p className="text-center text-gray-600 mb-6 text-lg">
-          {currentRound === totalRounds ? 'Final Results' : `Preview (Tournament in progress - Round ${currentRound}/${totalRounds})`}
-        </p>
+    <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
+      <Card elevation={3} sx={{ mb: 3 }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+            <TrophyIcon sx={{ fontSize: 40, color: 'secondary.main' }} />
+            <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+              Trophies & Medals
+            </Typography>
+          </Box>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+            {currentRound === totalRounds ? 'Final Results' : `Preview (Tournament in progress - Round ${currentRound}/${totalRounds})`}
+          </Typography>
 
-        {/* Top Trophies */}
-        <div className="mb-8">
-          <h3 className="text-xl font-semibold mb-4 text-brand-secondary">🏆 Main Trophies</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {renderPlayerCard(greatestCriminal, 'Greatest Criminals', '🥇 Trophy Winner')}
-            {renderPlayerCard(secondGreatest, 'Greatest Criminals', '🥈 Trophy 2nd Winner')}
-          </div>
-        </div>
+          {/* Main Trophies */}
+          <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2, mt: 3 }}>
+            🏆 Main Trophies
+          </Typography>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2, mb: 4 }}>
+            {renderPlayerCard(greatestCriminal, 'Greatest Criminal', '🥇 Trophy Winner', 'secondary')}
+            {renderPlayerCard(secondGreatest, 'Greatest Criminal', '🥈 Trophy 2nd Winner', 'secondary')}
+          </Box>
 
-        {/* Bronze Medals */}
-        <div className="mb-8">
-          <h3 className="text-xl font-semibold mb-4 text-orange-600">🥉 Bronze Medals</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {renderPlayerCard(thirdGreatest, 'Great Criminal 1', '🥉 Bronze')}
-            {renderPlayerCard(fourthGreatest, 'Great Criminal 2', '🥉 Bronze')}
-            {renderPlayerCard(fifthGreatest, 'Great Criminal 3', '🥉 Bronze')}
-          </div>
-        </div>
+          {/* Bronze Medals */}
+          <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
+            🥉 Bronze Medals
+          </Typography>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' }, gap: 2, mb: 4 }}>
+            {renderPlayerCard(thirdGreatest, 'Great Criminal 1', '🥉 Bronze', 'warning')}
+            {renderPlayerCard(fourthGreatest, 'Great Criminal 2', '🥉 Bronze', 'warning')}
+            {renderPlayerCard(fifthGreatest, 'Great Criminal 3', '🥉 Bronze', 'warning')}
+          </Box>
 
-        {/* Special Trophies */}
-        <div className="mb-8">
-          <h3 className="text-xl font-semibold mb-4 text-pink-600">👑 Special Categories</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {renderPlayerCard(mostDangerousLady, 'Most Dangerous Lady', '🏆 Trophy')}
-            {renderPlayerCard(youngestPlayer, 'Too young to be a criminal', '📌 Pins')}
-            {renderPlayerCard(mostDraws, 'Dancing between bullets (Most draws)', '📌 Pins')}
-            {renderPlayerCard(fastestShooter, 'Fastest Shooter of the east', '📌 Pins')}
-            {renderPlayerCard(perfectBalance, 'Perfect balance (Closest to 20₱)', '📌 Pins')}
-            {renderPlayerCard(untouchable, 'Untouchable (Least defeats)', '📌 Pins')}
-            {renderPlayerCard(bestUnknown, 'Who are you? (Best unknown player)', '📌 Pins')}
-          </div>
-        </div>
+          {/* Special Categories */}
+          <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
+            👑 Special Categories
+          </Typography>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2, mb: 4 }}>
+            {renderPlayerCard(mostDangerousLady, 'Most Dangerous Lady', '🏆 Trophy', 'error')}
+            {renderPlayerCard(youngestPlayer, 'Too young to be a criminal', '📌 Pins', 'info')}
+            {renderPlayerCard(mostDraws, 'Dancing between bullets (Most draws)', '📌 Pins', 'info')}
+            {renderPlayerCard(fastestShooter, 'Fastest Shooter of the east', '📌 Pins', 'info')}
+            {renderPlayerCard(perfectBalance, 'Perfect balance (Closest to 20₱)', '📌 Pins', 'info')}
+            {renderPlayerCard(untouchable, 'Untouchable (Least defeats)', '📌 Pins', 'info')}
+            {renderPlayerCard(bestUnknown, 'Who are you? (Best unknown player)', '📌 Pins', 'info')}
+          </Box>
 
-        {/* Gold Medals (Age Categories) */}
-        <div className="mb-8">
-          <h3 className="text-xl font-semibold mb-4 text-brand-secondary">🥇 Gold Medals (Age Categories)</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {renderPlayerCard(bornKillerBoy, 'Born killer (U12 Boy challenge)', '🥇 Gold Medal')}
-            {renderPlayerCard(bornKillerGirl, 'Born killer (U12 Girl challenge)', '🥇 Gold Medal')}
-            {renderPlayerCard(futureAssassin, 'Future assassins (U16 challenge)', '🥇 Gold Medal')}
-            {renderPlayerCard(youngKiller, 'Old enough to kill (U18 challenge)', '🥇 Gold Medal')}
-          </div>
-        </div>
+          {/* Gold Medals (Age Categories) */}
+          <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
+            🥇 Gold Medals (Age Categories)
+          </Typography>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2, mb: 4 }}>
+            {renderPlayerCard(bornKillerBoy, 'Born killer (U12 Boy challenge)', '🥇 Gold Medal', 'primary')}
+            {renderPlayerCard(bornKillerGirl, 'Born killer (U12 Girl challenge)', '🥇 Gold Medal', 'primary')}
+            {renderPlayerCard(futureAssassin, 'Future assassins (U16 challenge)', '🥇 Gold Medal', 'primary')}
+            {renderPlayerCard(youngKiller, 'Old enough to kill (U18 challenge)', '🥇 Gold Medal', 'primary')}
+          </Box>
 
-        {/* Participation */}
-        <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 text-center">
-          <div className="text-blue-900 font-semibold text-lg">
-            🎖️ Participation Pin: All {players.length} players receive 70 pins
-          </div>
-        </div>
-      </div>
-    </div>
+          {/* Participation */}
+          <Alert severity="info" icon={<MedalIcon />}>
+            <Typography variant="body1" sx={{ fontWeight: 600 }}>
+              🎖️ Participation Pin: All {players.length} players receive 70 pins
+            </Typography>
+          </Alert>
+        </CardContent>
+      </Card>
+    </Box>
   );
 }
-

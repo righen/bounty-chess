@@ -28,13 +28,23 @@ export async function loadTournamentState(): Promise<TournamentState | null> {
 
     if (playersError) throw playersError;
 
-    // Load rounds with games
+    // Load rounds
     const { data: roundsData, error: roundsError } = await supabase
       .from('rounds')
-      .select('*, games(*)')
+      .select('*')
       .order('round_number');
 
     if (roundsError) throw roundsError;
+
+    // Load all games separately
+    const { data: gamesData, error: gamesError } = await supabase
+      .from('games')
+      .select('*')
+      .order('round_number');
+
+    if (gamesError) throw gamesError;
+
+    console.log(`📥 Loaded ${(roundsData || []).length} rounds and ${(gamesData || []).length} games from Supabase`);
 
     // Transform to TournamentState
     const players: Player[] = (playersData || []).map(p => ({
@@ -57,23 +67,36 @@ export async function loadTournamentState(): Promise<TournamentState | null> {
       opponentIds: p.opponent_ids || [],
     }));
 
-    const rounds: Round[] = (roundsData || []).map(r => ({
-      number: r.round_number,
-      games: (r.games || []).map((g: any) => ({
-        id: g.id,
-        roundNumber: g.round_number,
-        whitePlayerId: g.white_player_id,
-        blackPlayerId: g.black_player_id,
-        result: g.result as GameResult,
-        sheriffUsage: {
-          white: g.white_sheriff_used,
-          black: g.black_sheriff_used,
-        },
-        bountyTransfer: g.bounty_transferred || 0,
-        completed: g.completed,
-      })),
-      completed: r.completed,
-    }));
+    // Group games by round number
+    const gamesByRound = new Map<number, any[]>();
+    (gamesData || []).forEach(g => {
+      if (!gamesByRound.has(g.round_number)) {
+        gamesByRound.set(g.round_number, []);
+      }
+      gamesByRound.get(g.round_number)!.push(g);
+    });
+
+    const rounds: Round[] = (roundsData || []).map(r => {
+      const roundGames = gamesByRound.get(r.round_number) || [];
+      console.log(`📥 Round ${r.round_number}: ${roundGames.length} games`);
+      return {
+        number: r.round_number,
+        games: roundGames.map((g: any) => ({
+          id: g.id,
+          roundNumber: g.round_number,
+          whitePlayerId: g.white_player_id,
+          blackPlayerId: g.black_player_id,
+          result: g.result as GameResult,
+          sheriffUsage: {
+            white: g.white_sheriff_used,
+            black: g.black_sheriff_used,
+          },
+          bountyTransfer: g.bounty_transferred || 0,
+          completed: g.completed,
+        })),
+        completed: r.completed,
+      };
+    });
 
     return {
       players,
@@ -132,35 +155,55 @@ export async function saveTournamentState(state: TournamentState): Promise<void>
 
     // Sync rounds and games
     for (const round of state.rounds) {
+      console.log(`💾 Saving Round ${round.number} with ${round.games.length} games`);
+      
       // Get or create round
-      const { data: existingRound } = await supabase
+      const { data: existingRound, error: existingRoundError } = await supabase
         .from('rounds')
         .select('id')
         .eq('round_number', round.number)
         .single();
 
+      if (existingRoundError && existingRoundError.code !== 'PGRST116') {
+        console.error('Error checking existing round:', existingRoundError);
+      }
+
       let roundId: string;
 
       if (existingRound) {
         roundId = existingRound.id;
+        console.log(`✓ Round ${round.number} already exists with ID: ${roundId}`);
         // Update round completion status
-        await supabase
+        const { error: updateError } = await supabase
           .from('rounds')
           .update({ completed: round.completed })
           .eq('id', roundId);
+        
+        if (updateError) {
+          console.error('Error updating round:', updateError);
+          throw updateError;
+        }
       } else {
         // Create new round
-        const { data: newRound } = await supabase
+        console.log(`➕ Creating new Round ${round.number}`);
+        const { data: newRound, error: insertError } = await supabase
           .from('rounds')
           .insert({ round_number: round.number, completed: round.completed })
           .select('id')
           .single();
         
+        if (insertError) {
+          console.error('Error creating round:', insertError);
+          throw insertError;
+        }
+        
         roundId = newRound!.id;
+        console.log(`✓ Created Round ${round.number} with ID: ${roundId}`);
       }
 
       // Upsert games
       if (round.games.length > 0) {
+        console.log(`💾 Upserting ${round.games.length} games for Round ${round.number}`);
         const gamesToUpsert = round.games.map(g => ({
           id: g.id,
           round_id: roundId,
@@ -174,9 +217,18 @@ export async function saveTournamentState(state: TournamentState): Promise<void>
           completed: g.completed,
         }));
 
-        await supabase
+        const { error: gamesError } = await supabase
           .from('games')
           .upsert(gamesToUpsert, { onConflict: 'id' });
+        
+        if (gamesError) {
+          console.error('Error upserting games:', gamesError);
+          throw gamesError;
+        }
+        
+        console.log(`✓ Successfully saved ${round.games.length} games`);
+      } else {
+        console.log(`⚠️ Round ${round.number} has no games to save`);
       }
     }
   } catch (error) {
@@ -209,6 +261,8 @@ export function startNewRound(state: TournamentState): TournamentState {
   }
 
   const games = generateSwissPairings(state.players, nextRoundNumber);
+  
+  console.log(`🎮 Generated ${games.length} games for Round ${nextRoundNumber}:`, games);
   
   const newRound: Round = {
     number: nextRoundNumber,

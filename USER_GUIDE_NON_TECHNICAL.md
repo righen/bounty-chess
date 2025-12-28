@@ -370,3 +370,6 @@ The software is designed to be simple and intuitive. If you can:
 **You can run this tournament!**
 
 Good luck and have a great tournament! ♟️🏆
+
+
+

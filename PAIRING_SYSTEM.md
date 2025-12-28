@@ -88,3 +88,6 @@ If you encounter any pairing issues:
 2. Verify player data is correct
 3. Use "Reset Tournament" if testing (WARNING: deletes all data)
 
+
+
+

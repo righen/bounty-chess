@@ -233,10 +233,8 @@ export default function Home() {
         sx={{ 
           flexGrow: 1,
           width: '100%',
-          transition: 'margin 225ms cubic-bezier(0, 0, 0.2, 1) 0ms',
-          ...(sidebarOpen && {
-            marginLeft: { lg: '290px' },
-          }),
+          minHeight: '100vh',
+          bgcolor: 'grey.50',
         }}
       >
         {/* Header */}
@@ -283,7 +281,7 @@ export default function Home() {
         </AppBar>
 
         {/* Content */}
-        <Box sx={{ p: { xs: 1, sm: 2, lg: 4 } }}>
+        <Box sx={{ p: { xs: 2, sm: 3, lg: 4 }, maxWidth: '100%' }}>
           {!state && view === 'setup' && (
             <PlayerImport onPlayersImported={handlePlayersImported} />
           )}

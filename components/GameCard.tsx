@@ -4,6 +4,22 @@ import { useState } from 'react';
 import { Game, Player } from '@/types';
 import { formatBounty, getCriminalStatusColor } from '@/lib/utils';
 import { canUseSheriffBadge } from '@/lib/bounty';
+import {
+  Card,
+  CardContent,
+  Box,
+  Typography,
+  Button,
+  Checkbox,
+  FormControlLabel,
+  Chip,
+  Stack,
+  Divider,
+} from '@mui/material';
+import {
+  EmojiEvents as TrophyIcon,
+  Shield as ShieldIcon,
+} from '@mui/icons-material';
 
 interface GameCardProps {
   game: Game;
@@ -19,52 +35,75 @@ export default function GameCard({ game, whitePlayer, blackPlayer, roundNumber, 
 
   if (game.completed) {
     return (
-      <div className="bg-white rounded-lg p-4 border-2 border-green-500 shadow-md">
-        <div className="flex justify-between items-center mb-3">
-          <span className="text-sm text-gray-600 font-semibold">Game Complete</span>
-          <span className="text-green-600 font-bold text-lg">✓</span>
-        </div>
+      <Card elevation={3} sx={{ borderLeft: 4, borderColor: 'success.main' }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Chip label="Game Complete" color="success" icon={<TrophyIcon />} />
+          </Box>
 
-        <div className="space-y-3">
-          {/* White Player */}
-          <div className={`p-3 rounded ${game.result === 'white' ? 'bg-green-50 border-2 border-green-500' : 'bg-gray-50 border border-gray-200'}`}>
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="font-semibold text-gray-800">
-                  {whitePlayer.name} {whitePlayer.surname}
-                  {game.sheriffUsage.white && <span className="ml-2">🛡️</span>}
-                </div>
-                <div className="text-sm text-gray-600">White • {formatBounty(whitePlayer.bounty)}</div>
-              </div>
-              {game.result === 'white' && <span className="text-2xl">👑</span>}
-            </div>
-          </div>
+          <Stack spacing={2}>
+            {/* White Player */}
+            <Box
+              sx={{
+                p: 2,
+                borderRadius: 1,
+                bgcolor: game.result === 'white' ? 'success.light' : 'grey.100',
+                border: 1,
+                borderColor: game.result === 'white' ? 'success.main' : 'grey.300',
+              }}
+            >
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                    {whitePlayer.name} {whitePlayer.surname}
+                    {game.sheriffUsage.white && <ShieldIcon sx={{ ml: 1, fontSize: 18, color: 'warning.main' }} />}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    White • {formatBounty(whitePlayer.bounty)}
+                  </Typography>
+                </Box>
+                {game.result === 'white' && <TrophyIcon sx={{ fontSize: 32, color: 'warning.main' }} />}
+              </Box>
+            </Box>
 
-          {/* Black Player */}
-          <div className={`p-3 rounded ${game.result === 'black' ? 'bg-green-50 border-2 border-green-500' : 'bg-gray-50 border border-gray-200'}`}>
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="font-semibold text-gray-800">
-                  {blackPlayer.name} {blackPlayer.surname}
-                  {game.sheriffUsage.black && <span className="ml-2">🛡️</span>}
-                </div>
-                <div className="text-sm text-gray-600">Black • {formatBounty(blackPlayer.bounty)}</div>
-              </div>
-              {game.result === 'black' && <span className="text-2xl">👑</span>}
-            </div>
-          </div>
+            {/* Black Player */}
+            <Box
+              sx={{
+                p: 2,
+                borderRadius: 1,
+                bgcolor: game.result === 'black' ? 'success.light' : 'grey.100',
+                border: 1,
+                borderColor: game.result === 'black' ? 'success.main' : 'grey.300',
+              }}
+            >
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                    {blackPlayer.name} {blackPlayer.surname}
+                    {game.sheriffUsage.black && <ShieldIcon sx={{ ml: 1, fontSize: 18, color: 'warning.main' }} />}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Black • {formatBounty(blackPlayer.bounty)}
+                  </Typography>
+                </Box>
+                {game.result === 'black' && <TrophyIcon sx={{ fontSize: 32, color: 'warning.main' }} />}
+              </Box>
+            </Box>
 
-          {game.result === 'draw' && (
-            <div className="text-center text-gray-600 text-sm font-semibold">Draw - No bounty transfer</div>
-          )}
+            {game.result === 'draw' && (
+              <Typography variant="body2" align="center" color="text.secondary" sx={{ fontWeight: 600 }}>
+                Draw - No bounty transfer
+              </Typography>
+            )}
 
-          {game.bountyTransfer > 0 && (
-            <div className="text-center text-brand-secondary font-bold text-lg">
-              Bounty Transfer: {formatBounty(game.bountyTransfer)}
-            </div>
-          )}
-        </div>
-      </div>
+            {game.bountyTransfer > 0 && (
+              <Typography variant="h6" align="center" sx={{ color: 'secondary.main', fontWeight: 'bold' }}>
+                Bounty Transfer: {formatBounty(game.bountyTransfer)}
+              </Typography>
+            )}
+          </Stack>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -78,97 +117,122 @@ export default function GameCard({ game, whitePlayer, blackPlayer, roundNumber, 
   };
 
   return (
-    <div className="bg-white rounded-lg p-4 border-2 border-gray-200 hover:border-brand-secondary transition-colors shadow-md">
-      <div className="space-y-3">
-        {/* White Player */}
-        <div className="bg-gray-50 p-3 rounded border border-gray-200">
-          <div className="flex justify-between items-start mb-2">
-            <div>
-              <div className="font-semibold text-gray-800">{whitePlayer.name} {whitePlayer.surname}</div>
-              <div className="text-sm text-gray-600">
-                White • {formatBounty(whitePlayer.bounty)} • Age {whitePlayer.age} {whitePlayer.gender}
-              </div>
-              <div className="text-xs mt-1">
-                <span className={`px-2 py-0.5 rounded ${getCriminalStatusColor(whitePlayer.criminalStatus)} text-white`}>
-                  {whitePlayer.criminalStatus}
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          {canWhiteUseSheriff && (
-            <label className="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={sheriffWhite}
-                onChange={(e) => setSheriffWhite(e.target.checked)}
-                className="w-5 h-5 accent-brand-secondary"
-              />
-              <span className="text-sm font-semibold text-gray-700">Use Sheriff Badge 🛡️</span>
-            </label>
-          )}
-          {!canWhiteUseSheriff && whitePlayer.hasSheriffBadge && roundNumber > 9 && (
-            <div className="text-xs text-gray-500 font-semibold">Badge expired (Round 9+)</div>
-          )}
-        </div>
+    <Card elevation={2} sx={{ '&:hover': { boxShadow: 4 } }}>
+      <CardContent>
+        <Stack spacing={2}>
+          {/* White Player */}
+          <Box sx={{ p: 2, borderRadius: 1, bgcolor: 'grey.50', border: 1, borderColor: 'grey.300' }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>
+              {whitePlayer.name} {whitePlayer.surname}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              White • {formatBounty(whitePlayer.bounty)} • Age {whitePlayer.age} {whitePlayer.gender}
+            </Typography>
+            <Chip 
+              label={whitePlayer.criminalStatus.toUpperCase()} 
+              size="small"
+              color={whitePlayer.criminalStatus === 'angry' ? 'warning' : whitePlayer.criminalStatus === 'mad' ? 'error' : 'default'}
+              sx={{ fontSize: '0.7rem' }}
+            />
 
-        {/* Black Player */}
-        <div className="bg-gray-50 p-3 rounded border border-gray-200">
-          <div className="flex justify-between items-start mb-2">
-            <div>
-              <div className="font-semibold text-gray-800">{blackPlayer.name} {blackPlayer.surname}</div>
-              <div className="text-sm text-gray-600">
-                Black • {formatBounty(blackPlayer.bounty)} • Age {blackPlayer.age} {blackPlayer.gender}
-              </div>
-              <div className="text-xs mt-1">
-                <span className={`px-2 py-0.5 rounded ${getCriminalStatusColor(blackPlayer.criminalStatus)} text-white`}>
-                  {blackPlayer.criminalStatus}
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          {canBlackUseSheriff && (
-            <label className="flex items-center space-x-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={sheriffBlack}
-                onChange={(e) => setSheriffBlack(e.target.checked)}
-                className="w-5 h-5 accent-brand-secondary"
+            {canWhiteUseSheriff && (
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={sheriffWhite}
+                    onChange={(e) => setSheriffWhite(e.target.checked)}
+                    color="warning"
+                  />
+                }
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <ShieldIcon sx={{ fontSize: 18 }} />
+                    <Typography variant="body2">Use Sheriff Badge</Typography>
+                  </Box>
+                }
+                sx={{ mt: 1 }}
               />
-              <span className="text-sm font-semibold text-gray-700">Use Sheriff Badge 🛡️</span>
-            </label>
-          )}
-          {!canBlackUseSheriff && blackPlayer.hasSheriffBadge && roundNumber > 9 && (
-            <div className="text-xs text-gray-500 font-semibold">Badge expired (Round 9+)</div>
-          )}
-        </div>
+            )}
+            {!canWhiteUseSheriff && whitePlayer.hasSheriffBadge && roundNumber > 9 && (
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                Badge expired (Round 9+)
+              </Typography>
+            )}
+          </Box>
 
-        {/* Result buttons */}
-        <div className="grid grid-cols-3 gap-2 pt-2">
-          <button
-            onClick={() => handleSubmit('white')}
-            className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-3 rounded-lg text-sm
-              transition-all active:scale-95 shadow-md"
-          >
-            White Wins
-          </button>
-          <button
-            onClick={() => handleSubmit('draw')}
-            className="bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 px-3 rounded-lg text-sm
-              transition-all active:scale-95 shadow-md"
-          >
-            Draw
-          </button>
-          <button
-            onClick={() => handleSubmit('black')}
-            className="bg-brand-quinary hover:bg-purple-700 text-white font-bold py-3 px-3 rounded-lg text-sm
-              transition-all active:scale-95 shadow-md"
-          >
-            Black Wins
-          </button>
-        </div>
-      </div>
-    </div>
+          {/* Black Player */}
+          <Box sx={{ p: 2, borderRadius: 1, bgcolor: 'grey.50', border: 1, borderColor: 'grey.300' }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600, mb: 0.5 }}>
+              {blackPlayer.name} {blackPlayer.surname}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              Black • {formatBounty(blackPlayer.bounty)} • Age {blackPlayer.age} {blackPlayer.gender}
+            </Typography>
+            <Chip 
+              label={blackPlayer.criminalStatus.toUpperCase()} 
+              size="small"
+              color={blackPlayer.criminalStatus === 'angry' ? 'warning' : blackPlayer.criminalStatus === 'mad' ? 'error' : 'default'}
+              sx={{ fontSize: '0.7rem' }}
+            />
+
+            {canBlackUseSheriff && (
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={sheriffBlack}
+                    onChange={(e) => setSheriffBlack(e.target.checked)}
+                    color="warning"
+                  />
+                }
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <ShieldIcon sx={{ fontSize: 18 }} />
+                    <Typography variant="body2">Use Sheriff Badge</Typography>
+                  </Box>
+                }
+                sx={{ mt: 1 }}
+              />
+            )}
+            {!canBlackUseSheriff && blackPlayer.hasSheriffBadge && roundNumber > 9 && (
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                Badge expired (Round 9+)
+              </Typography>
+            )}
+          </Box>
+
+          <Divider />
+
+          {/* Result buttons */}
+          <Stack direction="row" spacing={1}>
+            <Button
+              variant="contained"
+              color="success"
+              onClick={() => handleSubmit('white')}
+              fullWidth
+              sx={{ py: 1.5 }}
+            >
+              White Wins
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={() => handleSubmit('draw')}
+              fullWidth
+              sx={{ py: 1.5 }}
+            >
+              Draw
+            </Button>
+            <Button
+              variant="contained"
+              color="info"
+              onClick={() => handleSubmit('black')}
+              fullWidth
+              sx={{ py: 1.5 }}
+            >
+              Black Wins
+            </Button>
+          </Stack>
+        </Stack>
+      </CardContent>
+    </Card>
   );
 }

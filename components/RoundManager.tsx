@@ -3,6 +3,28 @@
 import { TournamentState, Game } from '@/types';
 import { submitGameResult } from '@/lib/store';
 import GameCard from './GameCard';
+import {
+  Box,
+  Typography,
+  Button,
+  LinearProgress,
+  Alert,
+  Card,
+  CardContent,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Stack,
+  Chip,
+} from '@mui/material';
+import {
+  ArrowBack as BackIcon,
+  Print as PrintIcon,
+} from '@mui/icons-material';
 
 interface RoundManagerProps {
   state: TournamentState;
@@ -15,17 +37,24 @@ export default function RoundManager({ state, onStateUpdate, onBackToLeaderboard
 
   if (!currentRound) {
     return (
-      <div className="max-w-4xl mx-auto text-center">
-        <div className="bg-white rounded-lg p-8 shadow-xl border border-gray-200">
-          <h2 className="text-2xl font-bold mb-4 text-brand-primary">No Active Round</h2>
-          <button
-            onClick={onBackToLeaderboard}
-            className="bg-brand-secondary hover:bg-yellow-500 text-brand-primary font-bold py-3 px-6 rounded-lg transition-all active:scale-95 shadow-md"
-          >
-            ← Back to Leaderboard
-          </button>
-        </div>
-      </div>
+      <Box sx={{ maxWidth: 600, mx: 'auto', textAlign: 'center' }}>
+        <Card elevation={3}>
+          <CardContent sx={{ py: 6 }}>
+            <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold' }}>
+              No Active Round
+            </Typography>
+            <Button
+              variant="contained"
+              color="secondary"
+              startIcon={<BackIcon />}
+              onClick={onBackToLeaderboard}
+              sx={{ mt: 2 }}
+            >
+              Back to Leaderboard
+            </Button>
+          </CardContent>
+        </Card>
+      </Box>
     );
   }
 
@@ -44,56 +73,71 @@ export default function RoundManager({ state, onStateUpdate, onBackToLeaderboard
   const regularGames = currentRound.games.filter(g => g.blackPlayerId !== 0);
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h2 className="text-3xl font-bold text-brand-primary">♟️ Round {currentRound.number}</h2>
-          <p className="text-gray-600 text-lg">
+    <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
+      {/* Header */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+            ♟️ Round {currentRound.number}
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
             {completedGames} of {totalGames} games completed
-          </p>
-        </div>
-        <button
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          color="info"
+          startIcon={<BackIcon />}
           onClick={onBackToLeaderboard}
-          className="bg-brand-quinary hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-all active:scale-95 shadow-md"
         >
-          ← Back to Leaderboard
-        </button>
-      </div>
+          Back to Leaderboard
+        </Button>
+      </Box>
 
       {/* Progress bar */}
-      <div className="mb-6 bg-gray-200 rounded-full h-4 overflow-hidden shadow-inner">
-        <div
-          className="bg-brand-secondary h-full transition-all duration-300"
-          style={{ width: `${progress}%` }}
+      <Box sx={{ mb: 3 }}>
+        <LinearProgress 
+          variant="determinate" 
+          value={progress} 
+          sx={{ height: 10, borderRadius: 5 }}
+          color="secondary"
         />
-      </div>
+      </Box>
 
+      {/* Round Complete Message */}
       {currentRound.completed && (
-        <div className="mb-6 p-4 bg-green-50 border-2 border-green-300 rounded-lg text-green-800 text-center font-semibold text-lg">
-          ✓ Round {currentRound.number} Complete! Go back to leaderboard to start the next round.
-        </div>
+        <Alert severity="success" sx={{ mb: 3 }}>
+          <Typography variant="body1" sx={{ fontWeight: 600 }}>
+            ✓ Round {currentRound.number} Complete! Go back to leaderboard to start the next round.
+          </Typography>
+        </Alert>
       )}
 
       {/* Bye notification */}
       {byeGames.length > 0 && (
-        <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
-          <h3 className="font-semibold text-blue-900 mb-2 text-lg">🎯 Players with BYE (automatic win, no bounty gain):</h3>
-          <div className="flex flex-wrap gap-2">
+        <Alert severity="info" sx={{ mb: 3 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+            🎯 Players with BYE (automatic win, no bounty gain):
+          </Typography>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
             {byeGames.map(game => {
               const player = state.players.find(p => p.id === game.whitePlayerId);
               if (!player) return null;
               return (
-                <div key={game.id} className="bg-blue-100 px-3 py-1 rounded text-blue-900 font-semibold">
-                  {player.name} {player.surname} (ID: {player.id})
-                </div>
+                <Chip 
+                  key={game.id}
+                  label={`${player.name} ${player.surname} (ID: ${player.id})`}
+                  color="info"
+                  size="small"
+                />
               );
             })}
-          </div>
-        </div>
+          </Stack>
+        </Alert>
       )}
 
       {/* Games grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'repeat(2, 1fr)' }, gap: 2, mb: 4 }}>
         {regularGames.map(game => {
           const whitePlayer = state.players.find(p => p.id === game.whitePlayerId);
           const blackPlayer = state.players.find(p => p.id === game.blackPlayerId);
@@ -111,102 +155,119 @@ export default function RoundManager({ state, onStateUpdate, onBackToLeaderboard
             />
           );
         })}
-      </div>
+      </Box>
 
       {/* Printable pairings */}
-      <div className="mt-8 bg-white rounded-lg p-6 shadow-xl border border-gray-200 print:shadow-none print:border-none">
-        <div className="flex justify-between items-center mb-6 print:mb-8">
-          <div>
-            <h3 className="text-2xl font-bold text-brand-primary print:text-3xl">Round {currentRound.number} - Pairings</h3>
-            <p className="text-gray-600 mt-1 print:text-gray-700">Total Games: {regularGames.length} • BYEs: {byeGames.length}</p>
-          </div>
-          <button
-            onClick={() => window.print()}
-            className="bg-brand-secondary hover:bg-yellow-500 text-brand-primary px-6 py-3 rounded-lg font-bold transition-all active:scale-95 shadow-md print:hidden"
-          >
-            🖨️ Print Pairings
-          </button>
-        </div>
-        
-        {/* Table format for easy reading */}
-        <table className="w-full border-collapse print:text-lg">
-          <thead>
-            <tr className="bg-gray-100 print:bg-gray-200">
-              <th className="border-2 border-gray-300 print:border-black px-4 py-3 text-left text-gray-800 font-bold">Board</th>
-              <th className="border-2 border-gray-300 print:border-black px-4 py-3 text-left text-gray-800 font-bold">⬜ White Player</th>
-              <th className="border-2 border-gray-300 print:border-black px-4 py-3 text-left text-gray-800 font-bold">⬛ Black Player</th>
-            </tr>
-          </thead>
-          <tbody>
-            {regularGames.map((game, index) => {
-              const whitePlayer = state.players.find(p => p.id === game.whitePlayerId);
-              const blackPlayer = state.players.find(p => p.id === game.blackPlayerId);
+      <Card elevation={3} sx={{ '@media print': { boxShadow: 'none' } }}>
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, '@media print': { mb: 4 } }}>
+            <Box>
+              <Typography variant="h5" sx={{ fontWeight: 'bold', '@media print': { fontSize: '2rem' } }}>
+                Round {currentRound.number} - Pairings
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                Total Games: {regularGames.length} • BYEs: {byeGames.length}
+              </Typography>
+            </Box>
+            <Button
+              variant="contained"
+              color="secondary"
+              startIcon={<PrintIcon />}
+              onClick={() => window.print()}
+              sx={{ '@media print': { display: 'none' } }}
+            >
+              Print Pairings
+            </Button>
+          </Box>
 
-              if (!whitePlayer || !blackPlayer) return null;
+          {/* Table format for easy reading */}
+          <TableContainer component={Paper} variant="outlined">
+            <Table>
+              <TableHead>
+                <TableRow sx={{ bgcolor: 'grey.100' }}>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Board</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>⬜ White Player</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>⬛ Black Player</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {regularGames.map((game, index) => {
+                  const whitePlayer = state.players.find(p => p.id === game.whitePlayerId);
+                  const blackPlayer = state.players.find(p => p.id === game.blackPlayerId);
 
-              return (
-                <tr key={game.id} className="hover:bg-gray-50">
-                  <td className="border-2 border-gray-300 print:border-black px-4 py-3 font-bold text-center text-brand-primary text-xl">
-                    {index + 1}
-                  </td>
-                  <td className="border-2 border-gray-300 print:border-black px-4 py-3">
-                    <div className="font-semibold text-lg text-gray-800">
-                      {whitePlayer.name} {whitePlayer.surname}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      ID: {whitePlayer.id} • Bounty: {whitePlayer.bounty}₱
-                    </div>
-                  </td>
-                  <td className="border-2 border-gray-300 print:border-black px-4 py-3">
-                    <div className="font-semibold text-lg text-gray-800">
-                      {blackPlayer.name} {blackPlayer.surname}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      ID: {blackPlayer.id} • Bounty: {blackPlayer.bounty}₱
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                  if (!whitePlayer || !blackPlayer) return null;
 
-        {/* BYE section */}
-        {byeGames.length > 0 && (
-          <div className="mt-6 print:mt-8 print:border-t-2 print:border-black print:pt-6">
-            <h4 className="text-xl font-bold mb-3 text-blue-900">🎯 BYE (Automatic Win - No bounty gain)</h4>
-            <table className="w-full border-collapse print:text-lg">
-              <thead>
-                <tr className="bg-blue-100 print:bg-gray-200">
-                  <th className="border-2 border-blue-300 print:border-black px-4 py-3 text-left text-gray-800 font-bold">Player</th>
-                  <th className="border-2 border-blue-300 print:border-black px-4 py-3 text-left text-gray-800 font-bold">Result</th>
-                </tr>
-              </thead>
-              <tbody>
-                {byeGames.map(game => {
-                  const player = state.players.find(p => p.id === game.whitePlayerId);
-                  if (!player) return null;
                   return (
-                    <tr key={game.id} className="bg-white">
-                      <td className="border-2 border-blue-300 print:border-black px-4 py-3">
-                        <div className="font-semibold text-lg text-gray-800">
-                          {player.name} {player.surname}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          ID: {player.id} • Bounty: {player.bounty}₱
-                        </div>
-                      </td>
-                      <td className="border-2 border-blue-300 print:border-black px-4 py-3 font-semibold text-green-700">
-                        Automatic Win (+1 Win, +0 Bounty)
-                      </td>
-                    </tr>
+                    <TableRow key={game.id} sx={{ '&:hover': { bgcolor: 'grey.50' } }}>
+                      <TableCell sx={{ fontWeight: 'bold', fontSize: '1.2rem' }}>
+                        {index + 1}
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                          {whitePlayer.name} {whitePlayer.surname}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          ID: {whitePlayer.id} • Bounty: {whitePlayer.bounty}₱
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                          {blackPlayer.name} {blackPlayer.surname}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          ID: {blackPlayer.id} • Bounty: {blackPlayer.bounty}₱
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {/* BYE section */}
+          {byeGames.length > 0 && (
+            <Box sx={{ mt: 3 }}>
+              <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
+                🎯 BYE (Automatic Win - No bounty gain)
+              </Typography>
+              <TableContainer component={Paper} variant="outlined">
+                <Table>
+                  <TableHead>
+                    <TableRow sx={{ bgcolor: 'info.light' }}>
+                      <TableCell sx={{ fontWeight: 'bold' }}>Player</TableCell>
+                      <TableCell sx={{ fontWeight: 'bold' }}>Result</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {byeGames.map(game => {
+                      const player = state.players.find(p => p.id === game.whitePlayerId);
+                      if (!player) return null;
+                      return (
+                        <TableRow key={game.id}>
+                          <TableCell>
+                            <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                              {player.name} {player.surname}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              ID: {player.id} • Bounty: {player.bounty}₱
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.main' }}>
+                              Automatic Win (+1 Win, +0 Bounty)
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+    </Box>
   );
 }

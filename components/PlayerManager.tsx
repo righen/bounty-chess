@@ -3,6 +3,37 @@
 import { useState } from 'react';
 import { Player } from '@/types';
 import { calculateAge, guessGender, formatBounty, getCriminalStatusColor, getAgeCategory } from '@/lib/utils';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Button,
+  Alert,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Chip,
+  IconButton,
+  Stack,
+} from '@mui/material';
+import {
+  Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon,
+  Warning as WarningIcon,
+} from '@mui/icons-material';
 
 interface PlayerManagerProps {
   players: Player[];
@@ -126,290 +157,293 @@ export default function PlayerManager({ players, onPlayersUpdate, tournamentStar
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <Box sx={{ maxWidth: 1400, mx: 'auto' }}>
       {/* Add/Edit Form */}
       {isAdding ? (
-        <div className="bg-white rounded-lg p-6 shadow-xl border border-gray-200">
-          <h3 className="text-2xl font-bold mb-6 text-brand-primary">
-            {editingId ? '✏️ Edit Player' : '➕ Add New Player'}
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-semibold mb-2 text-gray-700">
-                Player Number (auto-generated if empty)
-              </label>
-              <input
+        <Card elevation={3} sx={{ mb: 3 }}>
+          <CardContent>
+            <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 3 }}>
+              {editingId ? '✏️ Edit Player' : '➕ Add New Player'}
+            </Typography>
+            
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+              <TextField
+                fullWidth
+                label="Player Number"
                 type="number"
                 value={formData.id}
                 onChange={(e) => setFormData({ ...formData, id: e.target.value })}
                 disabled={editingId !== null}
-                className="w-full p-3 bg-gray-50 border-2 border-gray-200 rounded-lg text-gray-800
-                  focus:outline-none focus:ring-2 focus:ring-brand-secondary disabled:bg-gray-100"
-                placeholder="Auto"
+                placeholder="Auto-generated"
+                helperText="Leave empty for auto-generation"
               />
-            </div>
 
-            <div>
-              <label className="block text-sm font-semibold mb-2 text-gray-700">
-                First Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
+              <TextField
+                fullWidth
+                required
+                label="First Name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full p-3 bg-gray-50 border-2 border-gray-200 rounded-lg text-gray-800
-                  focus:outline-none focus:ring-2 focus:ring-brand-secondary"
                 placeholder="e.g., John"
               />
-            </div>
 
-            <div>
-              <label className="block text-sm font-semibold mb-2 text-gray-700">
-                Last Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
+              <TextField
+                fullWidth
+                required
+                label="Last Name"
                 value={formData.surname}
                 onChange={(e) => setFormData({ ...formData, surname: e.target.value })}
-                className="w-full p-3 bg-gray-50 border-2 border-gray-200 rounded-lg text-gray-800
-                  focus:outline-none focus:ring-2 focus:ring-brand-secondary"
                 placeholder="e.g., Doe"
               />
-            </div>
 
-            <div>
-              <label className="block text-sm font-semibold mb-2 text-gray-700">
-                Birth Date (DD/MM/YYYY) <span className="text-brand-quinary text-xs">(Optional)</span>
-              </label>
-              <input
-                type="text"
+              <TextField
+                fullWidth
+                label="Birth Date (DD/MM/YYYY)"
                 value={formData.birthdate}
                 onChange={(e) => setFormData({ ...formData, birthdate: e.target.value })}
-                className="w-full p-3 bg-gray-50 border-2 border-gray-200 rounded-lg text-gray-800
-                  focus:outline-none focus:ring-2 focus:ring-brand-secondary"
                 placeholder="e.g., 15/05/2000"
+                helperText="💡 Optional - can be added later"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                💡 Leave empty if unknown. Can be added later.
-              </p>
-            </div>
 
-            <div>
-              <label className="block text-sm font-semibold mb-2 text-gray-700">
-                Address
-              </label>
-              <input
-                type="text"
+              <TextField
+                fullWidth
+                label="Address"
                 value={formData.currentAddress}
                 onChange={(e) => setFormData({ ...formData, currentAddress: e.target.value })}
-                className="w-full p-3 bg-gray-50 border-2 border-gray-200 rounded-lg text-gray-800
-                  focus:outline-none focus:ring-2 focus:ring-brand-secondary"
                 placeholder="e.g., Quatre Bornes"
               />
-            </div>
 
-            <div>
-              <label className="block text-sm font-semibold mb-2 text-gray-700">
-                Meal Preference
-              </label>
-              <select
-                value={formData.meal}
-                onChange={(e) => setFormData({ ...formData, meal: e.target.value })}
-                className="w-full p-3 bg-gray-50 border-2 border-gray-200 rounded-lg text-gray-800
-                  focus:outline-none focus:ring-2 focus:ring-brand-secondary"
+              <FormControl fullWidth>
+                <InputLabel>Meal Preference</InputLabel>
+                <Select
+                  value={formData.meal}
+                  label="Meal Preference"
+                  onChange={(e) => setFormData({ ...formData, meal: e.target.value })}
+                >
+                  <MenuItem value="">Normal</MenuItem>
+                  <MenuItem value="Normal">Normal</MenuItem>
+                  <MenuItem value="Veg">Vegetarian</MenuItem>
+                  <MenuItem value="Vegan">Vegan</MenuItem>
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth required>
+                <InputLabel>Gender</InputLabel>
+                <Select
+                  value={formData.gender}
+                  label="Gender"
+                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                >
+                  <MenuItem value="M">Male</MenuItem>
+                  <MenuItem value="F">Female</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
+
+            <Stack direction="row" spacing={2} sx={{ mt: 3 }}>
+              <Button
+                fullWidth
+                variant="contained"
+                color="secondary"
+                size="large"
+                startIcon={<SaveIcon />}
+                onClick={editingId ? handleUpdate : handleAdd}
               >
-                <option value="">Normal</option>
-                <option value="Normal">Normal</option>
-                <option value="Veg">Vegetarian</option>
-                <option value="Vegan">Vegan</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold mb-2 text-gray-700">
-                Gender <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={formData.gender}
-                onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                className="w-full p-3 bg-gray-50 border-2 border-gray-200 rounded-lg text-gray-800
-                  focus:outline-none focus:ring-2 focus:ring-brand-secondary"
+                {editingId ? 'Update Player' : 'Add Player'}
+              </Button>
+              <Button
+                fullWidth
+                variant="outlined"
+                color="inherit"
+                size="large"
+                startIcon={<CancelIcon />}
+                onClick={resetForm}
               >
-                <option value="M">Male</option>
-                <option value="F">Female</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex gap-3 mt-6">
-            <button
-              onClick={editingId ? handleUpdate : handleAdd}
-              className="flex-1 bg-brand-secondary hover:bg-yellow-500 text-brand-primary font-bold py-3 px-6 rounded-lg
-                transition-all active:scale-95 shadow-md"
-            >
-              {editingId ? '✓ Update Player' : '✓ Add Player'}
-            </button>
-            <button
-              onClick={resetForm}
-              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-6 rounded-lg
-                transition-all active:scale-95"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
+                Cancel
+              </Button>
+            </Stack>
+          </CardContent>
+        </Card>
       ) : (
-        <div className="flex justify-end">
-          <button
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 3 }}>
+          <Button
+            variant="contained"
+            color="secondary"
+            size="large"
+            startIcon={<AddIcon />}
             onClick={() => setIsAdding(true)}
             disabled={tournamentStarted}
-            className={`font-bold py-3 px-6 rounded-lg transition-all shadow-md ${
-              tournamentStarted
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-brand-secondary hover:bg-yellow-500 text-brand-primary active:scale-95'
-            }`}
           >
-            ➕ Add New Player
-          </button>
-        </div>
+            Add New Player
+          </Button>
+        </Box>
       )}
 
       {/* Warning for missing birthdates */}
       {playersWithoutBirthdate > 0 && !tournamentStarted && (
-        <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <span className="text-2xl">⚠️</span>
-            <div>
-              <h4 className="font-bold text-yellow-800 mb-1">
-                {playersWithoutBirthdate} {playersWithoutBirthdate === 1 ? 'player' : 'players'} missing birthdate
-              </h4>
-              <p className="text-sm text-yellow-700">
-                These players won't receive age-based bounty protections (U12, U16) until birthdates are added.
-                Click "Edit" to add missing birthdates before starting the tournament.
-              </p>
-            </div>
-          </div>
-        </div>
+        <Alert severity="warning" icon={<WarningIcon />} sx={{ mb: 3 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 0.5 }}>
+            {playersWithoutBirthdate} {playersWithoutBirthdate === 1 ? 'player' : 'players'} missing birthdate
+          </Typography>
+          <Typography variant="body2">
+            These players won't receive age-based bounty protections (U12, U16) until birthdates are added.
+            Click "Edit" to add missing birthdates before starting the tournament.
+          </Typography>
+        </Alert>
       )}
 
       {/* Players List */}
-      <div className="bg-white rounded-lg overflow-hidden shadow-xl border border-gray-200">
-        <div className="p-4 bg-gray-100 border-b border-gray-200">
-          <h3 className="text-lg font-bold text-brand-primary">
-            Players List ({players.length} players)
+      <Card elevation={3}>
+        <CardContent>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+              Players List ({players.length} players)
+            </Typography>
             {playersWithoutBirthdate > 0 && (
-              <span className="ml-2 text-sm text-yellow-600">
-                ({playersWithoutBirthdate} missing birthdate)
-              </span>
+              <Chip 
+                label={`${playersWithoutBirthdate} missing birthdate`} 
+                color="warning" 
+                size="small"
+                icon={<WarningIcon />}
+              />
             )}
-          </h3>
-        </div>
+          </Box>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-gray-700">
-            <thead className="bg-gray-100 border-b border-gray-200">
-              <tr>
-                <th className="px-4 py-3 text-left font-bold text-gray-800">ID</th>
-                <th className="px-4 py-3 text-left font-bold text-gray-800">Name</th>
-                <th className="px-4 py-3 text-left font-bold text-gray-800">Birth Date</th>
-                <th className="px-4 py-3 text-center font-bold text-gray-800">Age</th>
-                <th className="px-4 py-3 text-center font-bold text-gray-800">Category</th>
-                <th className="px-4 py-3 text-center font-bold text-gray-800">Gender</th>
-                <th className="px-4 py-3 text-left font-bold text-gray-800">Address</th>
-                <th className="px-4 py-3 text-left font-bold text-gray-800">Meal</th>
-                {!tournamentStarted && (
-                  <th className="px-4 py-3 text-center font-bold text-gray-800">Actions</th>
+          <TableContainer component={Paper} variant="outlined">
+            <Table>
+              <TableHead>
+                <TableRow sx={{ bgcolor: 'grey.100' }}>
+                  <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Birth Date</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>Age</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>Category</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>Gender</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Address</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Meal</TableCell>
+                  {!tournamentStarted && (
+                    <TableCell sx={{ fontWeight: 'bold', textAlign: 'center' }}>Actions</TableCell>
+                  )}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {players.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={tournamentStarted ? 8 : 9} sx={{ textAlign: 'center', py: 4 }}>
+                      <Typography variant="body1" color="text.secondary">
+                        No players yet. Click "Add New Player" to start.
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  players.map((player, idx) => (
+                    <TableRow
+                      key={player.id}
+                      sx={{ 
+                        '&:hover': { bgcolor: 'grey.50' },
+                        bgcolor: idx % 2 === 0 ? 'white' : 'grey.50',
+                      }}
+                    >
+                      <TableCell>
+                        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+                          {player.id}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {player.name} {player.surname}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        {player.birthdate ? (
+                          <Typography variant="body2" color="text.secondary">
+                            {player.birthdate}
+                          </Typography>
+                        ) : (
+                          <Chip 
+                            label="Missing" 
+                            color="warning" 
+                            size="small"
+                            icon={<WarningIcon />}
+                          />
+                        )}
+                      </TableCell>
+                      <TableCell sx={{ textAlign: 'center' }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          {player.age > 0 ? player.age : '-'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ textAlign: 'center' }}>
+                        {player.age > 0 ? (
+                          <Chip 
+                            label={getAgeCategory(player.age).label} 
+                            size="small"
+                            sx={{ 
+                              bgcolor: getAgeCategory(player.age).color.includes('red') ? 'error.light' :
+                                      getAgeCategory(player.age).color.includes('blue') ? 'info.light' :
+                                      getAgeCategory(player.age).color.includes('green') ? 'success.light' :
+                                      'grey.300',
+                              color: 'text.primary',
+                              fontWeight: 600,
+                            }}
+                          />
+                        ) : (
+                          <Typography variant="body2" color="text.secondary">-</Typography>
+                        )}
+                      </TableCell>
+                      <TableCell sx={{ textAlign: 'center' }}>
+                        <Chip 
+                          label={player.gender === 'F' ? 'Female' : 'Male'}
+                          size="small"
+                          color={player.gender === 'F' ? 'error' : 'info'}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" color="text.secondary">
+                          {player.currentAddress || '-'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>
+                        <Typography variant="body2" color="text.secondary">
+                          {player.meal || 'Normal'}
+                        </Typography>
+                      </TableCell>
+                      {!tournamentStarted && (
+                        <TableCell>
+                          <Stack direction="row" spacing={1} justifyContent="center">
+                            <IconButton
+                              size="small"
+                              color="primary"
+                              onClick={() => handleEdit(player)}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => handleDelete(player.id)}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Stack>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))
                 )}
-              </tr>
-            </thead>
-            <tbody>
-              {players.length === 0 ? (
-                <tr>
-                  <td colSpan={tournamentStarted ? 8 : 9} className="px-4 py-8 text-center text-gray-400">
-                    No players yet. Click "Add New Player" to start.
-                  </td>
-                </tr>
-              ) : (
-                players.map((player, idx) => (
-                  <tr
-                    key={player.id}
-                    className={`border-t border-gray-100 ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-gray-100 transition-colors`}
-                  >
-                    <td className="px-4 py-3 text-gray-500">{player.id}</td>
-                    <td className="px-4 py-3">
-                      <div className="font-semibold text-gray-800">{player.name} {player.surname}</div>
-                    </td>
-                    <td className="px-4 py-3 text-sm">
-                      {player.birthdate ? (
-                        <span className="text-gray-600">{player.birthdate}</span>
-                      ) : (
-                        <span className="text-yellow-600 flex items-center gap-1 font-semibold">
-                          <span>⚠️</span>
-                          <span>Missing</span>
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <span className="text-gray-600 font-semibold">
-                        {player.age > 0 ? player.age : '-'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      {player.age > 0 ? (
-                        <span className={`text-xs px-2 py-1 rounded font-semibold ${getAgeCategory(player.age).color}`}>
-                          {getAgeCategory(player.age).label}
-                        </span>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <span className={`text-sm font-semibold ${
-                        player.gender === 'F' ? 'text-pink-500' : 'text-blue-500'
-                      }`}>
-                        {player.gender === 'F' ? 'Female' : 'Male'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {player.currentAddress || '-'}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {player.meal || 'Normal'}
-                    </td>
-                    {!tournamentStarted && (
-                      <td className="px-4 py-3">
-                        <div className="flex gap-2 justify-center">
-                          <button
-                            onClick={() => handleEdit(player)}
-                            className="px-3 py-1 bg-brand-quinary hover:bg-purple-700 text-white text-xs font-bold rounded
-                              transition-all active:scale-95"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDelete(player.id)}
-                            className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs font-bold rounded
-                              transition-all active:scale-95"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    )}
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </CardContent>
+      </Card>
 
       {tournamentStarted && (
-        <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 text-yellow-800 text-sm font-semibold">
-          ⚠️ Tournament has started. Player editing is disabled. Export data and restart to make changes.
-        </div>
+        <Alert severity="warning" sx={{ mt: 3 }}>
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            ⚠️ Tournament has started. Player editing is disabled. Export data and restart to make changes.
+          </Typography>
+        </Alert>
       )}
-    </div>
+    </Box>
   );
 }
