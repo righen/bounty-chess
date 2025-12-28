@@ -11,17 +11,17 @@ DELETE FROM rounds;
 -- 3. Delete all players (optional - comment out if you want to keep players)
 DELETE FROM players;
 
--- 4. Reset tournament status
+-- 4. Reset tournament status (update first row, or all if multiple exist)
 UPDATE tournament
 SET 
   current_round = 0,
-  tournament_started = false
-WHERE id = 'default';
+  tournament_started = false,
+  total_rounds = 9;
 
--- 5. If no tournament row exists, create one
-INSERT INTO tournament (id, current_round, total_rounds, tournament_started)
-VALUES ('default', 0, 9, false)
-ON CONFLICT (id) DO NOTHING;
+-- 5. If no tournament row exists, create one with generated UUID
+INSERT INTO tournament (current_round, total_rounds, tournament_started)
+SELECT 0, 9, false
+WHERE NOT EXISTS (SELECT 1 FROM tournament);
 
 -- Verify reset
 SELECT * FROM tournament;
