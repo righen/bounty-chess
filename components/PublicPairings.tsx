@@ -78,6 +78,8 @@ export default function PublicPairings({ currentRound }: PublicPairingsProps) {
     try {
       setLoading(true);
 
+      console.log(`🎮 Loading games for Round ${currentRound}...`);
+
       const { data: gamesData, error } = await supabase
         .from('games')
         .select(
@@ -90,11 +92,15 @@ export default function PublicPairings({ currentRound }: PublicPairingsProps) {
         .eq('round_number', currentRound)
         .order('id');
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error loading games:', error);
+        throw error;
+      }
 
+      console.log(`✅ Loaded ${gamesData?.length || 0} games for Round ${currentRound}`);
       setGames(gamesData || []);
     } catch (err) {
-      console.error('Error loading games:', err);
+      console.error('❌ Error loading games:', err);
     } finally {
       setLoading(false);
     }
