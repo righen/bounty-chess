@@ -123,23 +123,23 @@ export async function saveTournamentState(state: TournamentState): Promise<void>
       tournamentStarted: state.tournamentStarted,
     });
 
-    // Update tournament metadata
+    // Upsert tournament metadata (handles both update and insert)
     const { data: tournamentData, error: tournamentError } = await supabase
       .from('tournament')
-      .update({
+      .upsert({
+        id: TOURNAMENT_ID,
         current_round: state.currentRound,
         total_rounds: state.totalRounds,
         tournament_started: state.tournamentStarted,
-      })
-      .eq('id', TOURNAMENT_ID)
+      }, { onConflict: 'id' })
       .select();
 
     if (tournamentError) {
-      console.error('❌ Error updating tournament:', tournamentError);
+      console.error('❌ Error upserting tournament:', tournamentError);
       throw tournamentError;
     }
 
-    console.log('✅ Tournament updated:', tournamentData);
+    console.log('✅ Tournament saved:', tournamentData);
 
     // Upsert players
     if (state.players.length > 0) {
@@ -522,17 +522,22 @@ export async function clearTournamentData(): Promise<void> {
     // Delete all players
     await supabase.from('players').delete().neq('id', 0);
     
-    // Reset tournament
-    await supabase
+    // Ensure tournament row exists (upsert to handle if it was deleted)
+    const { error: tournamentError } = await supabase
       .from('tournament')
-      .update({
+      .upsert({
+        id: TOURNAMENT_ID,
         current_round: 0,
         total_rounds: 9,
         tournament_started: false,
-      })
-      .eq('id', TOURNAMENT_ID);
+      }, { onConflict: 'id' });
+    
+    if (tournamentError) {
+      console.error('❌ Error resetting tournament row:', tournamentError);
+      throw tournamentError;
+    }
       
-    console.log('✅ All data cleared');
+    console.log('✅ All data cleared and tournament row reset');
   } catch (error) {
     console.error('❌ Error clearing tournament data:', error);
     throw error;
