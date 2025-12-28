@@ -14,6 +14,8 @@ import {
   importTournamentData,
 } from '@/lib/supabase-store';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/lib/auth-context';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import PlayerImport from '@/components/PlayerImport';
 import PlayerManager from '@/components/PlayerManager';
 import Leaderboard from '@/components/Leaderboard';
@@ -22,6 +24,7 @@ import Sidebar from '@/components/Sidebar';
 import Prizes from '@/components/Prizes';
 
 export default function Home() {
+  const { profile } = useAuth();
   const [state, setState] = useState<TournamentState | null>(null);
   const [view, setView] = useState<'setup' | 'leaderboard' | 'round' | 'players' | 'prizes'>('setup');
   const [loading, setLoading] = useState(true);
@@ -212,116 +215,119 @@ export default function Home() {
   };
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-      {/* Sidebar */}
-      <Sidebar
-        sidebarOpen={sidebarOpen}
-        view={view}
-        onViewChange={setView}
-        onReset={handleReset}
-        onExport={handleExport}
-        onImport={handleImport}
-        tournamentStarted={state?.tournamentStarted || false}
-        playersCount={state?.players.length || 0}
-        currentRound={state?.currentRound || 0}
-        totalRounds={state?.totalRounds || 9}
-      />
+    <ProtectedRoute>
+      <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+        {/* Sidebar */}
+        <Sidebar
+          sidebarOpen={sidebarOpen}
+          view={view}
+          onViewChange={setView}
+          onReset={handleReset}
+          onExport={handleExport}
+          onImport={handleImport}
+          tournamentStarted={state?.tournamentStarted || false}
+          playersCount={state?.players.length || 0}
+          currentRound={state?.currentRound || 0}
+          totalRounds={state?.totalRounds || 9}
+          userRole={profile?.role || null}
+        />
 
-      {/* Main Content */}
-      <Box 
-        component="main" 
-        sx={{ 
-          flexGrow: 1,
-          width: '100%',
-          minHeight: '100vh',
-          bgcolor: 'grey.50',
-        }}
-      >
-        {/* Header */}
-        <AppBar 
-          position="sticky" 
-          color="inherit" 
-          elevation={1}
+        {/* Main Content */}
+        <Box 
+          component="main" 
           sx={{ 
-            bgcolor: 'background.paper',
-            '@media print': { display: 'none' },
+            flexGrow: 1,
+            width: '100%',
+            minHeight: '100vh',
+            bgcolor: 'grey.50',
           }}
         >
-          <Toolbar>
-            <IconButton
-              edge="start"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              sx={{ mr: 2 }}
-            >
-              <MenuIcon />
-            </IconButton>
+          {/* Header */}
+          <AppBar 
+            position="sticky" 
+            color="inherit" 
+            elevation={1}
+            sx={{ 
+              bgcolor: 'background.paper',
+              '@media print': { display: 'none' },
+            }}
+          >
+            <Toolbar>
+              <IconButton
+                edge="start"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                sx={{ mr: 2 }}
+              >
+                <MenuIcon />
+              </IconButton>
 
-            <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
-              {getPageTitle()}
-            </Typography>
+              <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
+                {getPageTitle()}
+              </Typography>
 
-            {syncing && (
-              <Chip 
-                label="Syncing..." 
-                color="success" 
-                size="small" 
-                sx={{ mr: 2, display: { xs: 'none', sm: 'flex' } }}
+              {syncing && (
+                <Chip 
+                  label="Syncing..." 
+                  color="success" 
+                  size="small" 
+                  sx={{ mr: 2, display: { xs: 'none', sm: 'flex' } }}
+                />
+              )}
+
+              {state && (
+                <Typography 
+                  variant="body2" 
+                  sx={{ display: { xs: 'none', md: 'block' }, color: 'text.secondary' }}
+                >
+                  <strong>{state.players.length}</strong> Players • <strong>Round {state.currentRound}/{state.totalRounds}</strong>
+                </Typography>
+              )}
+            </Toolbar>
+          </AppBar>
+
+          {/* Content */}
+          <Box sx={{ p: { xs: 2, sm: 3, lg: 4 }, maxWidth: '100%' }}>
+            {!state && view === 'setup' && profile?.role === 'admin' && (
+              <PlayerImport onPlayersImported={handlePlayersImported} />
+            )}
+
+            {state && view === 'players' && profile?.role === 'admin' && (
+              <PlayerManager
+                players={state.players}
+                onPlayersUpdate={handlePlayersUpdate}
+                tournamentStarted={state.tournamentStarted}
               />
             )}
 
-            {state && (
-              <Typography 
-                variant="body2" 
-                sx={{ display: { xs: 'none', md: 'block' }, color: 'text.secondary' }}
-              >
-                <strong>{state.players.length}</strong> Players • <strong>Round {state.currentRound}/{state.totalRounds}</strong>
-              </Typography>
+            {state && view === 'leaderboard' && (
+              <Leaderboard
+                players={state.players}
+                currentRound={state.currentRound}
+                totalRounds={state.totalRounds}
+                tournamentStarted={state.tournamentStarted}
+                onStartTournament={profile?.role === 'admin' ? handleStartTournament : undefined}
+                onGeneratePairing={profile?.role === 'admin' ? handleGeneratePairing : undefined}
+              />
             )}
-          </Toolbar>
-        </AppBar>
 
-        {/* Content */}
-        <Box sx={{ p: { xs: 2, sm: 3, lg: 4 }, maxWidth: '100%' }}>
-          {!state && view === 'setup' && (
-            <PlayerImport onPlayersImported={handlePlayersImported} />
-          )}
+            {state && view === 'round' && (
+              <RoundManager
+                state={state}
+                onStateUpdate={handleStateUpdate}
+                onBackToLeaderboard={() => setView('leaderboard')}
+              />
+            )}
 
-          {state && view === 'players' && (
-            <PlayerManager
-              players={state.players}
-              onPlayersUpdate={handlePlayersUpdate}
-              tournamentStarted={state.tournamentStarted}
-            />
-          )}
-
-          {state && view === 'leaderboard' && (
-            <Leaderboard
-              players={state.players}
-              currentRound={state.currentRound}
-              totalRounds={state.totalRounds}
-              tournamentStarted={state.tournamentStarted}
-              onStartTournament={handleStartTournament}
-              onGeneratePairing={handleGeneratePairing}
-            />
-          )}
-
-          {state && view === 'round' && (
-            <RoundManager
-              state={state}
-              onStateUpdate={handleStateUpdate}
-              onBackToLeaderboard={() => setView('leaderboard')}
-            />
-          )}
-
-          {state && view === 'prizes' && (
-            <Prizes
-              players={state.players}
-              currentRound={state.currentRound}
-              totalRounds={state.totalRounds}
-            />
-          )}
+            {state && view === 'prizes' && (
+              <Prizes
+                players={state.players}
+                currentRound={state.currentRound}
+                totalRounds={state.totalRounds}
+              />
+            )}
+          </Box>
         </Box>
       </Box>
-    </Box>
+    </ProtectedRoute>
   );
 }

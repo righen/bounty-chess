@@ -12,6 +12,7 @@ import {
   Divider,
   Paper,
   Button,
+  Chip,
 } from '@mui/material';
 import {
   People as PeopleIcon,
@@ -21,7 +22,11 @@ import {
   Upload as UploadIcon,
   Download as DownloadIcon,
   RestartAlt as ResetIcon,
+  Logout as LogoutIcon,
+  ManageAccounts as ManageAccountsIcon,
 } from '@mui/icons-material';
+import { useAuth, UserRole } from '@/lib/auth-context';
+import { useRouter } from 'next/navigation';
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -34,6 +39,7 @@ interface SidebarProps {
   playersCount: number;
   currentRound: number;
   totalRounds: number;
+  userRole: UserRole;
 }
 
 const DRAWER_WIDTH = 290;
@@ -49,13 +55,32 @@ export default function Sidebar({
   playersCount,
   currentRound,
   totalRounds,
+  userRole,
 }: SidebarProps) {
-  const menuItems = [
-    { id: 'players', label: 'Manage Players', icon: <PeopleIcon /> },
-    { id: 'leaderboard', label: 'Leaderboard', icon: <TrophyIcon /> },
-    { id: 'round', label: 'Current Round', icon: <GameIcon /> },
-    { id: 'prizes', label: 'Prizes', icon: <HomeIcon /> },
+  const { signOut, profile } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut();
+    router.push('/login');
+  };
+
+  // Define menu items with role-based visibility
+  const allMenuItems = [
+    { id: 'players', label: 'Manage Players', icon: <PeopleIcon />, roles: ['admin'] },
+    { id: 'leaderboard', label: 'Leaderboard', icon: <TrophyIcon />, roles: ['admin', 'arbiter'] },
+    { id: 'round', label: 'Current Round', icon: <GameIcon />, roles: ['admin', 'arbiter'] },
+    { id: 'prizes', label: 'Prizes', icon: <HomeIcon />, roles: ['admin', 'arbiter'] },
   ];
+
+  // Filter menu items based on user role
+  const menuItems = allMenuItems.filter(item => 
+    userRole && item.roles.includes(userRole)
+  );
+
+  const handleUserManagement = () => {
+    router.push('/admin/users');
+  };
 
   return (
     <Drawer
@@ -113,49 +138,95 @@ export default function Sidebar({
             </ListItem>
           ))}
 
-          <Divider sx={{ my: 2, bgcolor: 'rgba(255,255,255,0.1)' }} />
+          {/* Admin-only actions */}
+          {userRole === 'admin' && (
+            <>
+              <Divider sx={{ my: 2, bgcolor: 'rgba(255,255,255,0.1)' }} />
 
-          <ListItem disablePadding sx={{ mb: 1 }}>
-            <ListItemButton
-              onClick={onImport}
-              sx={{
-                borderRadius: 1,
-                color: 'white',
-                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' },
-              }}
-            >
-              <ListItemIcon sx={{ color: 'secondary.main', minWidth: 40 }}>
-                <UploadIcon />
-              </ListItemIcon>
-              <ListItemText 
-                primary="Import Data" 
-                primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500 }}
-              />
-            </ListItemButton>
-          </ListItem>
+              <ListItem disablePadding sx={{ mb: 1 }}>
+                <ListItemButton
+                  onClick={handleUserManagement}
+                  sx={{
+                    borderRadius: 1,
+                    color: 'white',
+                    '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' },
+                  }}
+                >
+                  <ListItemIcon sx={{ color: 'secondary.main', minWidth: 40 }}>
+                    <ManageAccountsIcon />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Manage Users" 
+                    primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500 }}
+                  />
+                </ListItemButton>
+              </ListItem>
 
-          <ListItem disablePadding sx={{ mb: 1 }}>
-            <ListItemButton
-              onClick={onExport}
-              sx={{
-                borderRadius: 1,
-                color: 'white',
-                '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' },
-              }}
-            >
-              <ListItemIcon sx={{ color: 'secondary.main', minWidth: 40 }}>
-                <DownloadIcon />
-              </ListItemIcon>
-              <ListItemText 
-                primary="Export Data" 
-                primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500 }}
-              />
-            </ListItemButton>
-          </ListItem>
+              <ListItem disablePadding sx={{ mb: 1 }}>
+                <ListItemButton
+                  onClick={onImport}
+                  sx={{
+                    borderRadius: 1,
+                    color: 'white',
+                    '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' },
+                  }}
+                >
+                  <ListItemIcon sx={{ color: 'secondary.main', minWidth: 40 }}>
+                    <UploadIcon />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Import Data" 
+                    primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500 }}
+                  />
+                </ListItemButton>
+              </ListItem>
+
+              <ListItem disablePadding sx={{ mb: 1 }}>
+                <ListItemButton
+                  onClick={onExport}
+                  sx={{
+                    borderRadius: 1,
+                    color: 'white',
+                    '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' },
+                  }}
+                >
+                  <ListItemIcon sx={{ color: 'secondary.main', minWidth: 40 }}>
+                    <DownloadIcon />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Export Data" 
+                    primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500 }}
+                  />
+                </ListItemButton>
+              </ListItem>
+            </>
+          )}
         </List>
 
         {/* Bottom Section */}
         <Box>
+          <Divider sx={{ mb: 2, bgcolor: 'rgba(255,255,255,0.1)' }} />
+          
+          {/* User Info */}
+          <Box sx={{ mb: 2, p: 2, bgcolor: 'rgba(255,255,255,0.05)', borderRadius: 1 }}>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', display: 'block', mb: 0.5 }}>
+              Logged in as
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'white', fontWeight: 600, mb: 0.5 }}>
+              {profile?.email || 'User'}
+            </Typography>
+            <Chip 
+              label={userRole === 'admin' ? 'Administrator' : 'Arbiter'} 
+              size="small"
+              sx={{ 
+                bgcolor: userRole === 'admin' ? 'secondary.main' : 'info.main',
+                color: userRole === 'admin' ? 'primary.main' : 'white',
+                fontWeight: 600,
+                fontSize: '0.7rem',
+              }}
+            />
+          </Box>
+
           <Divider sx={{ mb: 2, bgcolor: 'rgba(255,255,255,0.1)' }} />
           
           {/* Tournament Info */}
@@ -190,21 +261,41 @@ export default function Sidebar({
             </Paper>
           )}
 
-          {/* Reset Button */}
+          {/* Admin-only: Reset Button */}
+          {userRole === 'admin' && (
+            <Button
+              fullWidth
+              variant="contained"
+              startIcon={<ResetIcon />}
+              onClick={onReset}
+              sx={{
+                mb: 1,
+                bgcolor: 'rgba(255,255,255,0.1)',
+                color: 'white',
+                '&:hover': {
+                  bgcolor: 'rgba(255,255,255,0.15)',
+                },
+              }}
+            >
+              Reset Tournament
+            </Button>
+          )}
+
+          {/* Logout Button */}
           <Button
             fullWidth
             variant="contained"
-            startIcon={<ResetIcon />}
-            onClick={onReset}
+            startIcon={<LogoutIcon />}
+            onClick={handleLogout}
             sx={{
-              bgcolor: 'rgba(255,255,255,0.1)',
+              bgcolor: 'error.dark',
               color: 'white',
               '&:hover': {
-                bgcolor: 'rgba(255,255,255,0.15)',
+                bgcolor: 'error.main',
               },
             }}
           >
-            Reset Tournament
+            Logout
           </Button>
 
           {/* Footer */}

@@ -27,20 +27,22 @@ import LeaderboardMobile from './LeaderboardMobile';
 
 interface LeaderboardProps {
   players: Player[];
-  currentRound: number;
-  totalRounds: number;
-  tournamentStarted: boolean;
-  onStartTournament: () => void;
-  onGeneratePairing: () => void;
+  currentRound?: number;
+  totalRounds?: number;
+  tournamentStarted?: boolean;
+  onStartTournament?: () => void;
+  onGeneratePairing?: () => void;
+  isPublicView?: boolean;
 }
 
 export default function Leaderboard({ 
   players, 
-  currentRound, 
-  totalRounds, 
-  tournamentStarted, 
+  currentRound = 0, 
+  totalRounds = 9, 
+  tournamentStarted = false, 
   onStartTournament, 
-  onGeneratePairing 
+  onGeneratePairing,
+  isPublicView = false
 }: LeaderboardProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
