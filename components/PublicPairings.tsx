@@ -116,7 +116,28 @@ export default function PublicPairings({ currentRound }: PublicPairingsProps) {
         black_player: game.black_player_id ? playersMap.get(game.black_player_id) || null : null,
       }));
 
-      console.log(`✅ Enriched ${enrichedGames.length} games with player data`);
+      // Sort games in pairing order (BYE games last, then by white player surname + name)
+      enrichedGames.sort((a, b) => {
+        // BYE games go last
+        const aIsBye = a.black_player_id === null || a.black_player_id === '0';
+        const bIsBye = b.black_player_id === null || b.black_player_id === '0';
+        
+        if (aIsBye && !bIsBye) return 1;
+        if (!aIsBye && bIsBye) return -1;
+        
+        // Sort by white player surname, then name
+        const aWhite = a.white_player;
+        const bWhite = b.white_player;
+        
+        if (!aWhite || !bWhite) return 0;
+        
+        const surnameCompare = aWhite.surname.localeCompare(bWhite.surname);
+        if (surnameCompare !== 0) return surnameCompare;
+        
+        return aWhite.name.localeCompare(bWhite.name);
+      });
+
+      console.log(`✅ Enriched and sorted ${enrichedGames.length} games`);
       setGames(enrichedGames as any);
     } catch (err) {
       console.error('❌ Error loading games:', err);
