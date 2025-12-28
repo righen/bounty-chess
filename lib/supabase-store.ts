@@ -458,11 +458,62 @@ export function submitGameResult(
 }
 
 /**
- * Clear all tournament data
+ * Reset tournament but keep players (reset their stats to initial state)
+ */
+export async function resetTournamentKeepPlayers(): Promise<void> {
+  try {
+    console.log('🔄 Resetting tournament (keeping players)...');
+    
+    // Delete all games
+    await supabase.from('games').delete().neq('id', '');
+    
+    // Delete all rounds
+    await supabase.from('rounds').delete().neq('id', '');
+    
+    // Reset all players to initial state (20 bounty, sheriff badge, 0-0-0 record)
+    const { data: players } = await supabase.from('players').select('id');
+    
+    if (players && players.length > 0) {
+      await supabase
+        .from('players')
+        .update({
+          bounty: 20,
+          wins: 0,
+          losses: 0,
+          draws: 0,
+          has_sheriff_badge: true,
+          criminal_status: 'normal',
+          opponent_ids: [],
+          color_history: [],
+        })
+        .in('id', players.map(p => p.id));
+    }
+    
+    // Reset tournament status
+    await supabase
+      .from('tournament')
+      .update({
+        current_round: 0,
+        total_rounds: 9,
+        tournament_started: false,
+      })
+      .eq('id', TOURNAMENT_ID);
+      
+    console.log('✅ Tournament reset complete (players kept)');
+  } catch (error) {
+    console.error('❌ Error resetting tournament:', error);
+    throw error;
+  }
+}
+
+/**
+ * Clear all tournament data (DELETE EVERYTHING)
  */
 export async function clearTournamentData(): Promise<void> {
   try {
-    // Delete all games (will cascade delete due to foreign key)
+    console.log('🗑️ Clearing ALL tournament data...');
+    
+    // Delete all games
     await supabase.from('games').delete().neq('id', '');
     
     // Delete all rounds
@@ -480,8 +531,10 @@ export async function clearTournamentData(): Promise<void> {
         tournament_started: false,
       })
       .eq('id', TOURNAMENT_ID);
+      
+    console.log('✅ All data cleared');
   } catch (error) {
-    console.error('Error clearing tournament data:', error);
+    console.error('❌ Error clearing tournament data:', error);
     throw error;
   }
 }

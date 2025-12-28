@@ -2,14 +2,16 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { TournamentState, Player } from '@/types';
-import { Box, AppBar, Toolbar, IconButton, Typography, Chip } from '@mui/material';
+import { Box, AppBar, Toolbar, IconButton, Typography, Chip, Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Alert } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import WarningIcon from '@mui/icons-material/Warning';
 import { 
   loadTournamentState, 
   saveTournamentState, 
   initializeTournament,
   startNewRound,
   clearTournamentData,
+  resetTournamentKeepPlayers,
   exportTournamentData,
   importTournamentData,
 } from '@/lib/supabase-store';
@@ -30,6 +32,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [resetConfirmText, setResetConfirmText] = useState('');
 
   // Load state from Supabase on mount
   useEffect(() => {
@@ -150,10 +154,18 @@ export default function Home() {
   };
 
   const handleReset = async () => {
-    if (confirm('Are you sure you want to reset the entire tournament? This cannot be undone.')) {
-      await clearTournamentData();
-      setState(null);
-      setView('setup');
+    // Reset tournament but KEEP players (reset their stats to initial state)
+    if (confirm('Reset tournament but keep all players?\n\n✅ Players will be kept\n✅ Stats reset to 0-0-0\n✅ Bounty reset to 20\n✅ Sheriff badges restored\n\n(To delete players too, export data first then use full reset)')) {
+      try {
+        await resetTournamentKeepPlayers();
+        // Reload state to show players with reset stats
+        const reloaded = await loadTournamentState();
+        setState(reloaded);
+        setView('players');
+      } catch (error) {
+        console.error('Error resetting tournament:', error);
+        alert('Error resetting tournament. Check console for details.');
+      }
     }
   };
 
