@@ -117,15 +117,29 @@ export async function loadTournamentState(): Promise<TournamentState | null> {
  */
 export async function saveTournamentState(state: TournamentState): Promise<void> {
   try {
+    console.log('💾 Saving tournament state...', {
+      players: state.players.length,
+      currentRound: state.currentRound,
+      tournamentStarted: state.tournamentStarted,
+    });
+
     // Update tournament metadata
-    await supabase
+    const { data: tournamentData, error: tournamentError } = await supabase
       .from('tournament')
       .update({
         current_round: state.currentRound,
         total_rounds: state.totalRounds,
         tournament_started: state.tournamentStarted,
       })
-      .eq('id', TOURNAMENT_ID);
+      .eq('id', TOURNAMENT_ID)
+      .select();
+
+    if (tournamentError) {
+      console.error('❌ Error updating tournament:', tournamentError);
+      throw tournamentError;
+    }
+
+    console.log('✅ Tournament updated:', tournamentData);
 
     // Upsert players
     if (state.players.length > 0) {
@@ -150,9 +164,17 @@ export async function saveTournamentState(state: TournamentState): Promise<void>
         color_history: p.colorHistory,
       }));
 
-      await supabase
+      const { data: playersData, error: playersError } = await supabase
         .from('players')
-        .upsert(playersToUpsert, { onConflict: 'id' });
+        .upsert(playersToUpsert, { onConflict: 'id' })
+        .select();
+
+      if (playersError) {
+        console.error('❌ Error upserting players:', playersError);
+        throw playersError;
+      }
+
+      console.log(`✅ ${playersData?.length || 0} players saved to database`);
     }
 
     // Sync rounds and games
