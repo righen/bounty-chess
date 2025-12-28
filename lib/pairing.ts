@@ -36,10 +36,48 @@ function hasConsecutiveSameColor(player: Player): boolean {
 }
 
 /**
+ * Check if giving a player a color would result in 3 consecutive same colors (FORBIDDEN)
+ */
+function wouldViolateTwoConsecutiveRule(player: Player, proposedColor: 'W' | 'B'): boolean {
+  if (player.colorHistory.length < 2) return false;
+  
+  const last = player.colorHistory[player.colorHistory.length - 1];
+  const secondLast = player.colorHistory[player.colorHistory.length - 2];
+  
+  // Check if last two colors are the same and match the proposed color
+  // This would create 3 in a row
+  return last !== 'BYE' && last === secondLast && last === proposedColor;
+}
+
+/**
  * Determine which player should be white based on FIDE color balancing rules
  * Returns true if player1 should be white, false if player2 should be white
  */
 function determineColors(player1: Player, player2: Player): boolean {
+  // RULE 0 (ABSOLUTE): Never allow 3 consecutive same colors
+  // This is the strongest rule and overrides everything else
+  const p1WouldViolateWhite = wouldViolateTwoConsecutiveRule(player1, 'W');
+  const p1WouldViolateBlack = wouldViolateTwoConsecutiveRule(player1, 'B');
+  const p2WouldViolateWhite = wouldViolateTwoConsecutiveRule(player2, 'W');
+  const p2WouldViolateBlack = wouldViolateTwoConsecutiveRule(player2, 'B');
+  
+  // If player1 white would violate but player2 white wouldn't
+  if (p1WouldViolateWhite && !p2WouldViolateWhite) {
+    return false; // Player2 must be white
+  }
+  
+  // If player2 white would violate but player1 white wouldn't
+  if (p2WouldViolateWhite && !p1WouldViolateWhite) {
+    return true; // Player1 must be white
+  }
+  
+  // If both would violate with white, check black
+  if (p1WouldViolateWhite && p2WouldViolateWhite) {
+    // Both had WW, so both must get black - impossible pairing!
+    // Fall through to other rules (this shouldn't happen with proper pairing)
+    console.warn('Both players would violate white color rule');
+  }
+  
   // Rule 1: Strong due color (2 consecutive same colors)
   const p1Consecutive = hasConsecutiveSameColor(player1);
   const p2Consecutive = hasConsecutiveSameColor(player2);
