@@ -80,25 +80,44 @@ export default function PublicPairings({ currentRound }: PublicPairingsProps) {
 
       console.log(`🎮 Loading games for Round ${currentRound}...`);
 
-      const { data: gamesData, error } = await supabase
+      // Load games first
+      const { data: gamesData, error: gamesError } = await supabase
         .from('games')
-        .select(
-          `
-          *,
-          white_player:players!games_white_player_id_fkey(id, name, surname),
-          black_player:players!games_black_player_id_fkey(id, name, surname)
-        `
-        )
+        .select('*')
         .eq('round_number', currentRound)
         .order('id');
 
-      if (error) {
-        console.error('❌ Error loading games:', error);
-        throw error;
+      if (gamesError) {
+        console.error('❌ Error loading games:', gamesError);
+        throw gamesError;
       }
 
-      console.log(`✅ Loaded ${gamesData?.length || 0} games for Round ${currentRound}`);
-      setGames(gamesData || []);
+      console.log(`✅ Loaded ${gamesData?.length || 0} games`);
+
+      // Load all players
+      const { data: playersData, error: playersError } = await supabase
+        .from('players')
+        .select('id, name, surname');
+
+      if (playersError) {
+        console.error('❌ Error loading players:', playersError);
+        throw playersError;
+      }
+
+      console.log(`✅ Loaded ${playersData?.length || 0} players`);
+
+      // Map player IDs to player objects
+      const playersMap = new Map(playersData?.map(p => [p.id, p]) || []);
+
+      // Enrich games with player data
+      const enrichedGames = (gamesData || []).map(game => ({
+        ...game,
+        white_player: game.white_player_id ? playersMap.get(game.white_player_id) || null : null,
+        black_player: game.black_player_id ? playersMap.get(game.black_player_id) || null : null,
+      }));
+
+      console.log(`✅ Enriched ${enrichedGames.length} games with player data`);
+      setGames(enrichedGames as any);
     } catch (err) {
       console.error('❌ Error loading games:', err);
     } finally {
