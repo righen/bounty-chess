@@ -13,12 +13,21 @@ export function generateSwissPairings(
 ): Game[] {
   const games: Game[] = [];
   
-  // Sort players by bounty (highest first), then by wins as tiebreaker
+  // For Round 1, sort alphabetically (by surname, then name)
+  // For subsequent rounds, sort by bounty (highest first), then by wins
   const sortedPlayers = [...players].sort((a, b) => {
-    if (b.bounty !== a.bounty) {
-      return b.bounty - a.bounty;
+    if (roundNumber === 1) {
+      // Alphabetical by surname, then name
+      const surnameCompare = a.surname.localeCompare(b.surname);
+      if (surnameCompare !== 0) return surnameCompare;
+      return a.name.localeCompare(b.name);
+    } else {
+      // By bounty, then wins
+      if (b.bounty !== a.bounty) {
+        return b.bounty - a.bounty;
+      }
+      return b.wins - a.wins;
     }
-    return b.wins - a.wins;
   });
 
   const paired = new Set<number>();

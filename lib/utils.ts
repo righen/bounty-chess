@@ -87,7 +87,7 @@ export function parseCSV(csvText: string): Omit<Player, 'age' | 'gender' | 'boun
  * Initialize players with game state
  */
 export function initializePlayers(rawPlayers: Omit<Player, 'age' | 'gender' | 'bounty' | 'hasSheriffBadge' | 'criminalStatus' | 'wins' | 'losses' | 'draws' | 'opponentIds'>[]): Player[] {
-  return rawPlayers.map(p => ({
+  const players = rawPlayers.map(p => ({
     ...p,
     age: calculateAge(p.birthdate),
     gender: guessGender(p.name),
@@ -99,6 +99,13 @@ export function initializePlayers(rawPlayers: Omit<Player, 'age' | 'gender' | 'b
     draws: 0,
     opponentIds: [],
   }));
+  
+  // Sort alphabetically by surname, then name
+  return players.sort((a, b) => {
+    const surnameCompare = a.surname.localeCompare(b.surname);
+    if (surnameCompare !== 0) return surnameCompare;
+    return a.name.localeCompare(b.name);
+  });
 }
 
 /**
