@@ -154,17 +154,53 @@ export default function Home() {
   };
 
   const handleReset = async () => {
-    // Reset tournament but KEEP players (reset their stats to initial state)
-    if (confirm('Reset tournament but keep all players?\n\n✅ Players will be kept\n✅ Stats reset to 0-0-0\n✅ Bounty reset to 20\n✅ Sheriff badges restored\n\n(To delete players too, export data first then use full reset)')) {
+    // Show dialog with TWO options
+    const choice = confirm(
+      '🔄 RESET TOURNAMENT\n\n' +
+      'Choose reset type:\n\n' +
+      '✅ OK = Keep Players (reset stats only)\n' +
+      '   • Players stay in database\n' +
+      '   • Stats reset to 0-0-0, bounty 20\n' +
+      '   • Good for multiple tournaments\n\n' +
+      '❌ CANCEL = Then click again for full reset\n\n' +
+      'Click OK to reset but keep players.'
+    );
+
+    if (choice) {
+      // Option 1: Keep players, reset stats
       try {
         await resetTournamentKeepPlayers();
-        // Reload state to show players with reset stats
         const reloaded = await loadTournamentState();
         setState(reloaded);
         setView('players');
+        alert('✅ Tournament reset! Players kept, stats reset.');
       } catch (error) {
         console.error('Error resetting tournament:', error);
-        alert('Error resetting tournament. Check console for details.');
+        alert('❌ Error resetting tournament. Check console.');
+      }
+    } else {
+      // User clicked Cancel - offer full reset
+      const fullReset = confirm(
+        '🗑️ FULL RESET (DELETE EVERYTHING)\n\n' +
+        '⚠️ WARNING: This will DELETE:\n' +
+        '   • All players\n' +
+        '   • All rounds\n' +
+        '   • All games\n' +
+        '   • Everything!\n\n' +
+        '💾 EXPORT DATA FIRST if you want to keep it!\n\n' +
+        'Click OK to DELETE EVERYTHING.'
+      );
+
+      if (fullReset) {
+        try {
+          await clearTournamentData();
+          setState(null);
+          setView('setup');
+          alert('🗑️ Everything deleted. Starting fresh.');
+        } catch (error) {
+          console.error('Error clearing data:', error);
+          alert('❌ Error clearing data. Check console.');
+        }
       }
     }
   };
