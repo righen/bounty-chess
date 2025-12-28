@@ -337,7 +337,17 @@ export default function PlayerManager({ players, onPlayersUpdate, tournamentStar
                     </TableCell>
                   </TableRow>
                 ) : (
-                  players.map((player, idx) => (
+                  // Sort alphabetically before tournament, by ID during tournament
+                  [...players]
+                    .sort((a, b) => {
+                      if (!tournamentStarted) {
+                        const surnameCompare = a.surname.localeCompare(b.surname);
+                        if (surnameCompare !== 0) return surnameCompare;
+                        return a.name.localeCompare(b.name);
+                      }
+                      return a.id - b.id; // During tournament, keep original ID order
+                    })
+                    .map((player, idx) => (
                     <TableRow
                       key={player.id}
                       sx={{ 

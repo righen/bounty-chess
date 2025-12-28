@@ -47,10 +47,18 @@ export default function Leaderboard({
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  // Sort players by bounty (highest first)
+  // Sort players: alphabetically if tournament not started, by bounty if started
   const sortedPlayers = [...players].sort((a, b) => {
-    if (b.bounty !== a.bounty) return b.bounty - a.bounty;
-    return b.wins - a.wins;
+    if (!tournamentStarted) {
+      // Before tournament: alphabetical by surname, then name
+      const surnameCompare = a.surname.localeCompare(b.surname);
+      if (surnameCompare !== 0) return surnameCompare;
+      return a.name.localeCompare(b.name);
+    } else {
+      // During tournament: by bounty, then wins
+      if (b.bounty !== a.bounty) return b.bounty - a.bounty;
+      return b.wins - a.wins;
+    }
   });
 
   const canGenerateNextRound = currentRound < totalRounds && tournamentStarted;
