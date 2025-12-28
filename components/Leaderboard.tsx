@@ -72,21 +72,20 @@ export default function Leaderboard({
 
   if (isMobile) {
     return (
-      <Box sx={{ maxWidth: '100%' }}>
-        {/* Header */}
-        <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-            <TrophyIcon sx={{ fontSize: 32, color: 'secondary.main' }} />
-            <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-              Leaderboard
-            </Typography>
-          </Box>
-
-          <Box sx={{ mb: 3 }}>
+      <Box sx={{ maxWidth: '100%', px: 1 }}>
+        {/* Compact Header */}
+        <Box sx={{ mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+              <TrophyIcon sx={{ fontSize: 24, color: 'secondary.main' }} />
+              <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                Leaderboard
+              </Typography>
+            </Box>
             {tournamentStarted ? (
-              <Chip label="✓ Tournament Started" color="success" />
+              <Chip label="Started" color="success" size="small" />
             ) : (
-              <Chip label="⏸️ Not Started" color="warning" />
+              <Chip label="Not Started" color="warning" size="small" />
             )}
           </Box>
 
@@ -96,10 +95,10 @@ export default function Leaderboard({
               fullWidth
               variant="contained"
               color="secondary"
-              size="large"
+              size="medium"
               startIcon={<RocketIcon />}
               onClick={onStartTournament}
-              sx={{ py: 2 }}
+              sx={{ py: 1.25, fontSize: '0.9rem' }}
             >
               Start Tournament
             </Button>
@@ -109,16 +108,16 @@ export default function Leaderboard({
               fullWidth
               variant="contained"
               color="secondary"
-              size="large"
+              size="medium"
               startIcon={<PlayIcon />}
               onClick={onGeneratePairing}
-              sx={{ py: 2 }}
+              sx={{ py: 1.25, fontSize: '0.9rem' }}
             >
               Generate Round {currentRound + 1}
             </Button>
           )}
           {tournamentStarted && !canGenerateNextRound && (
-            <Typography variant="h5" align="center" sx={{ color: 'warning.main', fontWeight: 'bold' }}>
+            <Typography variant="body1" align="center" sx={{ color: 'warning.main', fontWeight: 'bold', py: 1 }}>
               🎉 Tournament Complete!
             </Typography>
           )}

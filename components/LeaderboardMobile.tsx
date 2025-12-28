@@ -1,114 +1,147 @@
 'use client';
 
 import { Player } from '@/types';
-import { formatBounty, getCriminalStatusColor, getAgeCategory } from '@/lib/utils';
+import { formatBounty, getAgeCategory } from '@/lib/utils';
+import { 
+  Box,
+  Card,
+  Typography,
+  Chip,
+  Stack,
+} from '@mui/material';
 
 interface LeaderboardMobileProps {
   players: Player[];
 }
 
 export default function LeaderboardMobile({ players }: LeaderboardMobileProps) {
+  const getRankIcon = (index: number) => {
+    if (index === 0) return '🥇';
+    if (index === 1) return '🥈';
+    if (index === 2) return '🥉';
+    return `#${index + 1}`;
+  };
+
   return (
-    <div className="space-y-3">
-      {players.map((player, index) => {
-        const ageCategory = player.age > 0 ? getAgeCategory(player.age) : null;
-        
-        return (
-          <div
-            key={player.id}
-            className={`bg-gray-800 rounded-lg p-4 border-2 ${
-              index < 2 ? 'border-yellow-500 bg-yellow-900/10' : 'border-gray-700'
-            }`}
-          >
-            {/* Header: Rank and Name */}
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className={`text-2xl font-bold ${
-                    index < 2 ? 'text-yellow-400' : 'text-gray-300'
-                  }`}>
-                    #{index + 1}
-                  </span>
-                  <span className="text-xs text-gray-500">ID: {player.id}</span>
-                </div>
-                <h3 className="text-lg font-bold text-white">
-                  {player.name} {player.surname}
-                </h3>
-                {player.currentAddress && (
-                  <p className="text-sm text-gray-400">{player.currentAddress}</p>
-                )}
-              </div>
-              
-              {/* Bounty Badge */}
-              <div className="bg-yellow-600 text-white px-4 py-2 rounded-lg text-center min-w-[80px]">
-                <div className="text-xs font-semibold">Bounty</div>
-                <div className="text-xl font-bold">{player.bounty}₱</div>
-              </div>
-            </div>
+    <Stack spacing={1.5}>
+      {players.map((player, index) => (
+        <Card 
+          key={player.id}
+          elevation={1}
+          sx={{ 
+            p: 1.5,
+            border: index < 3 ? 2 : 0,
+            borderColor: index < 3 ? 'secondary.main' : 'transparent',
+          }}
+        >
+          {/* Header Row: Rank + Name + Bounty */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                <Typography variant="h6" sx={{ fontWeight: 'bold', color: index < 3 ? 'secondary.main' : 'text.primary' }}>
+                  {getRankIcon(index)}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  ID: {player.id}
+                </Typography>
+              </Box>
+              <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                {player.name} {player.surname}
+              </Typography>
+            </Box>
+            
+            {/* Compact Bounty Badge */}
+            <Box sx={{ 
+              bgcolor: 'secondary.main', 
+              color: 'white', 
+              px: 1.5, 
+              py: 0.5, 
+              borderRadius: 1,
+              textAlign: 'center',
+              minWidth: 60,
+            }}>
+              <Typography variant="caption" sx={{ fontSize: '0.65rem', display: 'block', lineHeight: 1 }}>
+                Bounty
+              </Typography>
+              <Typography variant="h6" sx={{ fontWeight: 'bold', lineHeight: 1 }}>
+                {player.bounty}₱
+              </Typography>
+            </Box>
+          </Box>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              {/* Age & Category */}
-              <div className="bg-gray-700 rounded p-2">
-                <div className="text-xs text-gray-400 mb-1">Age</div>
-                <div className="flex items-center gap-2">
-                  {player.age > 0 ? (
-                    <>
-                      <span className="text-lg font-bold">{player.age}</span>
-                      {ageCategory && (
-                        <span className={`text-xs px-2 py-0.5 rounded font-bold ${ageCategory.color}`}>
-                          {ageCategory.label}
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    <span className="text-gray-500">-</span>
-                  )}
-                </div>
-              </div>
+          {/* Compact Stats Grid - 2x2 */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0.75, mb: 1 }}>
+            {/* Age */}
+            <Box sx={{ bgcolor: 'grey.100', borderRadius: 1, p: 0.75 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', display: 'block' }}>
+                Age
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.85rem' }}>
+                {player.age > 0 ? (
+                  <>
+                    {player.age}
+                    {' '}
+                    {player.age < 12 && <Chip label="Adult" size="small" sx={{ height: 14, fontSize: '0.6rem' }} />}
+                  </>
+                ) : '-'}
+              </Typography>
+            </Box>
 
-              {/* Gender */}
-              <div className="bg-gray-700 rounded p-2">
-                <div className="text-xs text-gray-400 mb-1">Gender</div>
-                <span className={`text-lg font-bold ${
-                  player.gender === 'F' ? 'text-pink-400' : 'text-blue-400'
-                }`}>
-                  {player.gender === 'F' ? 'Female' : 'Male'}
-                </span>
-              </div>
+            {/* Gender */}
+            <Box sx={{ bgcolor: 'grey.100', borderRadius: 1, p: 0.75 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', display: 'block' }}>
+                Gender
+              </Typography>
+              <Chip 
+                label={player.gender === 'F' ? 'Female' : 'Male'}
+                size="small"
+                color={player.gender === 'F' ? 'error' : 'primary'}
+                sx={{ height: 18, fontSize: '0.7rem', mt: 0.25 }}
+              />
+            </Box>
 
-              {/* Record */}
-              <div className="bg-gray-700 rounded p-2">
-                <div className="text-xs text-gray-400 mb-1">Record</div>
-                <div className="text-sm">
-                  <span className="text-green-400 font-bold">{player.wins}W</span>
-                  {' '}-{' '}
-                  <span className="text-red-400 font-bold">{player.losses}L</span>
-                  {' '}-{' '}
-                  <span className="text-blue-400 font-bold">{player.draws}D</span>
-                </div>
-              </div>
+            {/* Record */}
+            <Box sx={{ bgcolor: 'grey.100', borderRadius: 1, p: 0.75 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', display: 'block' }}>
+                Record
+              </Typography>
+              <Typography variant="body2" sx={{ fontSize: '0.75rem', lineHeight: 1.3 }}>
+                <Box component="span" sx={{ color: 'success.main', fontWeight: 600 }}>{player.wins}W</Box>
+                {' '}
+                <Box component="span" sx={{ color: 'error.main', fontWeight: 600 }}>{player.losses}L</Box>
+                {' '}
+                <Box component="span" sx={{ color: 'text.secondary', fontWeight: 600 }}>{player.draws}D</Box>
+              </Typography>
+            </Box>
 
-              {/* Sheriff Badge */}
-              <div className="bg-gray-700 rounded p-2">
-                <div className="text-xs text-gray-400 mb-1">Sheriff</div>
-                <div className="text-2xl">
-                  {player.hasSheriffBadge ? '🛡️' : '❌'}
-                </div>
-              </div>
-            </div>
+            {/* Sheriff */}
+            <Box sx={{ bgcolor: 'grey.100', borderRadius: 1, p: 0.75, textAlign: 'center' }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', display: 'block' }}>
+                Sheriff
+              </Typography>
+              <Typography sx={{ fontSize: '1.2rem', lineHeight: 1 }}>
+                {player.hasSheriffBadge ? '🛡️' : '✗'}
+              </Typography>
+            </Box>
+          </Box>
 
-            {/* Criminal Status */}
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-400">Criminal Status:</span>
-              <span className={`px-3 py-1 rounded-full text-sm font-bold ${getCriminalStatusColor(player.criminalStatus)} text-white uppercase`}>
-                {player.criminalStatus}
-              </span>
-            </div>
-          </div>
-        );
-      })}
-    </div>
+          {/* Criminal Status - Only show if not normal */}
+          {player.criminalStatus !== 'normal' && (
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pt: 0.5 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
+                Criminal Status:
+              </Typography>
+              <Chip 
+                label={player.criminalStatus.toUpperCase()}
+                size="small"
+                color={player.criminalStatus === 'angry' ? 'warning' : 'error'}
+                sx={{ height: 18, fontSize: '0.7rem', fontWeight: 'bold' }}
+              />
+            </Box>
+          )}
+        </Card>
+      ))}
+    </Stack>
   );
 }
 
