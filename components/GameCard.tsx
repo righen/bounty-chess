@@ -92,13 +92,13 @@ export default function GameCard({ game, whitePlayer, blackPlayer, roundNumber, 
 
             {game.result === 'draw' && (
               <Typography variant="body2" align="center" color="text.secondary" sx={{ fontWeight: 600 }}>
-                Draw - No bounty transfer
+                Draw - No pesos transfer
               </Typography>
             )}
 
             {game.bountyTransfer > 0 && (
               <Typography variant="h6" align="center" sx={{ color: 'secondary.main', fontWeight: 'bold' }}>
-                Bounty Transfer: {formatBounty(game.bountyTransfer)}
+                Pesos Transfer: {formatBounty(game.bountyTransfer)}
               </Typography>
             )}
           </Stack>

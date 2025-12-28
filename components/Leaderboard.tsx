@@ -193,7 +193,7 @@ export default function Leaderboard({
               <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
               <TableCell align="center" sx={{ fontWeight: 'bold' }}>Age</TableCell>
               <TableCell align="center" sx={{ fontWeight: 'bold' }}>Gender</TableCell>
-              <TableCell align="center" sx={{ fontWeight: 'bold' }}>Bounty</TableCell>
+              <TableCell align="center" sx={{ fontWeight: 'bold' }}>Pesos</TableCell>
               <TableCell align="center" sx={{ fontWeight: 'bold' }}>Record</TableCell>
               <TableCell align="center" sx={{ fontWeight: 'bold' }}>Sheriff</TableCell>
               <TableCell align="center" sx={{ fontWeight: 'bold' }}>Status</TableCell>

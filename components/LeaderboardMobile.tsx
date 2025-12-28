@@ -50,7 +50,7 @@ export default function LeaderboardMobile({ players }: LeaderboardMobileProps) {
               </Typography>
             </Box>
             
-            {/* Compact Bounty Badge */}
+            {/* Compact Pesos Badge */}
             <Box sx={{ 
               bgcolor: 'secondary.main', 
               color: 'white', 
@@ -61,7 +61,7 @@ export default function LeaderboardMobile({ players }: LeaderboardMobileProps) {
               minWidth: 60,
             }}>
               <Typography variant="caption" sx={{ fontSize: '0.65rem', display: 'block', lineHeight: 1 }}>
-                Bounty
+                Pesos
               </Typography>
               <Typography variant="h6" sx={{ fontWeight: 'bold', lineHeight: 1 }}>
                 {player.bounty}₱

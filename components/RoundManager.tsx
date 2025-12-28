@@ -207,7 +207,7 @@ export default function RoundManager({ state, onStateUpdate, onBackToLeaderboard
                           {whitePlayer.name} {whitePlayer.surname}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          ID: {whitePlayer.id} • Bounty: {whitePlayer.bounty}₱
+                          ID: {whitePlayer.id} • Pesos: {whitePlayer.bounty}₱
                         </Typography>
                       </TableCell>
                       <TableCell>
@@ -215,7 +215,7 @@ export default function RoundManager({ state, onStateUpdate, onBackToLeaderboard
                           {blackPlayer.name} {blackPlayer.surname}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          ID: {blackPlayer.id} • Bounty: {blackPlayer.bounty}₱
+                          ID: {blackPlayer.id} • Pesos: {blackPlayer.bounty}₱
                         </Typography>
                       </TableCell>
                     </TableRow>
@@ -250,12 +250,12 @@ export default function RoundManager({ state, onStateUpdate, onBackToLeaderboard
                               {player.name} {player.surname}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
-                              ID: {player.id} • Bounty: {player.bounty}₱
+                              ID: {player.id} • Pesos: {player.bounty}₱
                             </Typography>
                           </TableCell>
                           <TableCell>
                             <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.main' }}>
-                              Automatic Win (+1 Win, +0 Bounty)
+                              Automatic Win (+1 Win, +0 Pesos)
                             </Typography>
                           </TableCell>
                         </TableRow>
