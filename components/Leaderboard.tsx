@@ -82,8 +82,8 @@ export default function Leaderboard({
             )}
           </Box>
 
-          {/* Action Button */}
-          {!tournamentStarted && (
+          {/* Action Button - Hide in public view */}
+          {!isPublicView && !tournamentStarted && onStartTournament && (
             <Button
               fullWidth
               variant="contained"
@@ -96,7 +96,7 @@ export default function Leaderboard({
               Start Tournament
             </Button>
           )}
-          {tournamentStarted && canGenerateNextRound && (
+          {!isPublicView && tournamentStarted && canGenerateNextRound && onGeneratePairing && (
             <Button
               fullWidth
               variant="contained"
@@ -140,38 +140,40 @@ export default function Leaderboard({
           )}
         </Box>
 
-        {/* Action Button */}
-        <Box>
-          {!tournamentStarted && (
-            <Button
-              variant="contained"
-              color="secondary"
-              size="large"
-              startIcon={<RocketIcon />}
-              onClick={onStartTournament}
-              sx={{ px: 4, py: 2, fontSize: '1.1rem' }}
-            >
-              Start Tournament
-            </Button>
-          )}
-          {tournamentStarted && canGenerateNextRound && (
-            <Button
-              variant="contained"
-              color="info"
-              size="large"
-              startIcon={<PlayIcon />}
-              onClick={onGeneratePairing}
-              sx={{ px: 4, py: 2, fontSize: '1.1rem' }}
-            >
-              Generate Round {currentRound + 1}
-            </Button>
-          )}
-          {tournamentStarted && !canGenerateNextRound && (
-            <Typography variant="h5" sx={{ color: 'warning.main', fontWeight: 'bold' }}>
-              🎉 Tournament Complete!
-            </Typography>
-          )}
-        </Box>
+        {/* Action Button - Hide in public view */}
+        {!isPublicView && (
+          <Box>
+            {!tournamentStarted && onStartTournament && (
+              <Button
+                variant="contained"
+                color="secondary"
+                size="large"
+                startIcon={<RocketIcon />}
+                onClick={onStartTournament}
+                sx={{ px: 4, py: 2, fontSize: '1.1rem' }}
+              >
+                Start Tournament
+              </Button>
+            )}
+            {tournamentStarted && canGenerateNextRound && onGeneratePairing && (
+              <Button
+                variant="contained"
+                color="info"
+                size="large"
+                startIcon={<PlayIcon />}
+                onClick={onGeneratePairing}
+                sx={{ px: 4, py: 2, fontSize: '1.1rem' }}
+              >
+                Generate Round {currentRound + 1}
+              </Button>
+            )}
+            {tournamentStarted && !canGenerateNextRound && (
+              <Typography variant="h5" sx={{ color: 'warning.main', fontWeight: 'bold' }}>
+                🎉 Tournament Complete!
+              </Typography>
+            )}
+          </Box>
+        )}
       </Box>
 
       {/* Table */}

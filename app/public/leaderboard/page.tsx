@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Box, Typography, Button, AppBar, Toolbar, Alert } from '@mui/material';
+import { Box, Typography, Button, AppBar, Toolbar, Alert, Tabs, Tab } from '@mui/material';
 import Leaderboard from '@/components/Leaderboard';
+import PublicPairings from '@/components/PublicPairings';
 import { Player } from '@/types';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
@@ -13,6 +14,7 @@ export default function PublicLeaderboardPage() {
   const [totalRounds, setTotalRounds] = useState(9);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
     loadData();
@@ -89,20 +91,21 @@ export default function PublicLeaderboardPage() {
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
       {/* Header */}
-      <AppBar position="static" elevation={0}>
+      <AppBar position="static" elevation={0} sx={{ bgcolor: 'primary.main' }}>
         <Toolbar>
           <Typography
             variant="h6"
             sx={{
               flexGrow: 1,
               fontWeight: 700,
-              color: 'primary.main',
+              color: 'white',
             }}
           >
-            BOUNTY <span style={{ color: '#ffcc33' }}>CHESS</span>
+            <Box component="span" sx={{ color: 'white' }}>BOUNTY</Box>{' '}
+            <Box component="span" sx={{ color: 'secondary.main' }}>CHESS</Box>
           </Typography>
-          <Typography variant="body2" sx={{ mr: 2, color: 'text.secondary' }}>
-            Public Leaderboard
+          <Typography variant="body2" sx={{ mr: 2, color: 'rgba(255,255,255,0.7)' }}>
+            Live Tournament
           </Typography>
           <Button
             component={Link}
@@ -114,7 +117,7 @@ export default function PublicLeaderboardPage() {
               color: 'secondary.main',
               '&:hover': {
                 borderColor: 'secondary.main',
-                bgcolor: 'rgba(255, 204, 51, 0.1)',
+                bgcolor: 'rgba(255, 204, 51, 0.2)',
               },
             }}
           >
@@ -128,7 +131,7 @@ export default function PublicLeaderboardPage() {
         {/* Tournament Info */}
         <Box sx={{ mb: 3, textAlign: 'center' }}>
           <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main', mb: 1 }}>
-            🏆 Tournament Leaderboard
+            🏆 Live Tournament
           </Typography>
           <Typography variant="body1" color="text.secondary">
             Round {currentRound} of {totalRounds} • {players.length} Players
@@ -142,11 +145,30 @@ export default function PublicLeaderboardPage() {
           </Alert>
         )}
 
-        {/* Leaderboard */}
+        {/* Tabs */}
+        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+          <Tabs
+            value={activeTab}
+            onChange={(_, newValue) => setActiveTab(newValue)}
+            centered
+            sx={{
+              '& .MuiTab-root': {
+                fontSize: '1rem',
+                fontWeight: 600,
+                textTransform: 'none',
+              },
+            }}
+          >
+            <Tab label="🏆 Leaderboard" />
+            <Tab label="📋 Current Pairings" />
+          </Tabs>
+        </Box>
+
+        {/* Tab Content */}
         {loading ? (
           <Box sx={{ textAlign: 'center', py: 8 }}>
             <Typography variant="h6" color="text.secondary">
-              Loading leaderboard...
+              Loading...
             </Typography>
           </Box>
         ) : players.length === 0 ? (
@@ -156,16 +178,23 @@ export default function PublicLeaderboardPage() {
             </Typography>
           </Box>
         ) : (
-          <Leaderboard
-            players={players}
-            isPublicView={true}
-          />
+          <>
+            {/* Leaderboard Tab */}
+            {activeTab === 0 && (
+              <Box>
+                <Leaderboard players={players} isPublicView={true} currentRound={currentRound} />
+              </Box>
+            )}
+
+            {/* Pairings Tab */}
+            {activeTab === 1 && <PublicPairings currentRound={currentRound} />}
+          </>
         )}
 
         {/* Auto-refresh Notice */}
         <Box sx={{ textAlign: 'center', mt: 4 }}>
           <Typography variant="caption" color="text.secondary">
-            🔄 Leaderboard updates automatically • Last updated: {new Date().toLocaleTimeString()}
+            🔄 Updates automatically in real-time • Last updated: {new Date().toLocaleTimeString()}
           </Typography>
         </Box>
       </Box>
