@@ -12,6 +12,7 @@ export default function PublicLeaderboardPage() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentRound, setCurrentRound] = useState(0);
   const [totalRounds, setTotalRounds] = useState(9);
+  const [tournamentStarted, setTournamentStarted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState(0);
@@ -40,22 +41,20 @@ export default function PublicLeaderboardPage() {
     try {
       setLoading(true);
 
-      // Load players
+      // Load players (no sorting - let the component handle it)
       const { data: playersData, error: playersError } = await supabase
         .from('players')
-        .select('*')
-        .order('bounty', { ascending: false });
+        .select('*');
 
       if (playersError) throw playersError;
 
-      // Load rounds to get current round
-      const { data: roundsData, error: roundsError } = await supabase
-        .from('rounds')
-        .select('round_number')
-        .order('round_number', { ascending: false })
-        .limit(1);
+      // Load tournament status
+      const { data: tournamentData, error: tournamentError } = await supabase
+        .from('tournament')
+        .select('current_round, tournament_started')
+        .single();
 
-      if (roundsError) throw roundsError;
+      if (tournamentError && tournamentError.code !== 'PGRST116') throw tournamentError;
 
       const players: Player[] = (playersData || []).map((p) => ({
         id: p.id,
@@ -79,7 +78,8 @@ export default function PublicLeaderboardPage() {
       }));
 
       setPlayers(players);
-      setCurrentRound(roundsData?.[0]?.round_number || 0);
+      setCurrentRound(tournamentData?.current_round || 0);
+      setTournamentStarted(tournamentData?.tournament_started || false);
       setError(null);
     } catch (err) {
       console.error('Error loading leaderboard:', err);
@@ -183,7 +183,12 @@ export default function PublicLeaderboardPage() {
             {/* Leaderboard Tab */}
             {activeTab === 0 && (
               <Box>
-                <Leaderboard players={players} isPublicView={true} currentRound={currentRound} />
+                <Leaderboard 
+                  players={players} 
+                  isPublicView={true} 
+                  currentRound={currentRound}
+                  tournamentStarted={tournamentStarted}
+                />
               </Box>
             )}
 
