@@ -170,6 +170,7 @@ export function submitGameResult(
     if (p.id === whitePlayer.id) {
       const updates: Partial<Player> = {
         opponentIds: [...p.opponentIds, blackPlayer.id],
+        colorHistory: [...p.colorHistory, 'W'], // Add WHITE to color history
       };
       
       if (result === 'white') {
@@ -195,6 +196,7 @@ export function submitGameResult(
     if (p.id === blackPlayer.id) {
       const updates: Partial<Player> = {
         opponentIds: [...p.opponentIds, whitePlayer.id],
+        colorHistory: [...p.colorHistory, 'B'], // Add BLACK to color history
       };
       
       if (result === 'black') {
