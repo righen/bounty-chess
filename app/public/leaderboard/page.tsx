@@ -75,6 +75,7 @@ export default function PublicLeaderboardPage() {
         hasSheriffBadge: p.has_sheriff_badge,
         criminalStatus: p.criminal_status as 'normal' | 'angry' | 'mad',
         opponentIds: p.opponent_ids || [],
+        colorHistory: (p.color_history as ('W' | 'B' | 'BYE')[]) || [],
       }));
 
       setPlayers(players);

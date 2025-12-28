@@ -65,6 +65,7 @@ export async function loadTournamentState(): Promise<TournamentState | null> {
       hasSheriffBadge: p.has_sheriff_badge,
       criminalStatus: p.criminal_status as 'normal' | 'angry' | 'mad',
       opponentIds: p.opponent_ids || [],
+      colorHistory: (p.color_history as ('W' | 'B' | 'BYE')[]) || [],
     }));
 
     // Group games by round number
@@ -146,6 +147,7 @@ export async function saveTournamentState(state: TournamentState): Promise<void>
         has_sheriff_badge: p.hasSheriffBadge,
         criminal_status: p.criminalStatus,
         opponent_ids: p.opponentIds,
+        color_history: p.colorHistory,
       }));
 
       await supabase
@@ -264,6 +266,21 @@ export function startNewRound(state: TournamentState): TournamentState {
   
   console.log(`🎮 Generated ${games.length} games for Round ${nextRoundNumber}:`, games);
   
+  // Handle BYE games - update player color history immediately
+  const updatedPlayers = state.players.map(player => {
+    const byeGame = games.find(g => g.blackPlayerId === 0 && g.whitePlayerId === player.id);
+    if (byeGame) {
+      // Player has a BYE, add to color history and update stats
+      return {
+        ...player,
+        colorHistory: [...player.colorHistory, 'BYE' as const],
+        wins: player.wins + 1, // BYE counts as a win
+        opponentIds: [...player.opponentIds], // No opponent for BYE
+      };
+    }
+    return player;
+  });
+  
   const newRound: Round = {
     number: nextRoundNumber,
     games,
@@ -272,6 +289,7 @@ export function startNewRound(state: TournamentState): TournamentState {
 
   return {
     ...state,
+    players: updatedPlayers,
     rounds: [...state.rounds, newRound],
     currentRound: nextRoundNumber,
   };
@@ -341,6 +359,7 @@ export function submitGameResult(
     if (player.id === whitePlayer.id) {
       const updates: Partial<Player> = {
         opponentIds: [...player.opponentIds, blackPlayer.id],
+        colorHistory: [...player.colorHistory, 'W' as const], // Record white color
       };
 
       if (result === 'white') {
@@ -363,6 +382,7 @@ export function submitGameResult(
     if (player.id === blackPlayer.id) {
       const updates: Partial<Player> = {
         opponentIds: [...player.opponentIds, whitePlayer.id],
+        colorHistory: [...player.colorHistory, 'B' as const], // Record black color
       };
 
       if (result === 'black') {

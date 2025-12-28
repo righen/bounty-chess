@@ -8,6 +8,76 @@ function getPoints(player: Player): number {
 }
 
 /**
+ * Get color balance for a player
+ * Returns: positive = more whites, negative = more blacks, 0 = equal
+ */
+function getColorBalance(player: Player): number {
+  const whites = player.colorHistory.filter(c => c === 'W').length;
+  const blacks = player.colorHistory.filter(c => c === 'B').length;
+  return whites - blacks;
+}
+
+/**
+ * Get the last color a player had (for alternation preference)
+ */
+function getLastColor(player: Player): 'W' | 'B' | null {
+  const lastNonBye = [...player.colorHistory].reverse().find(c => c !== 'BYE');
+  return lastNonBye === 'W' ? 'W' : lastNonBye === 'B' ? 'B' : null;
+}
+
+/**
+ * Check if player had same color twice in a row (strong due opposite color)
+ */
+function hasConsecutiveSameColor(player: Player): boolean {
+  if (player.colorHistory.length < 2) return false;
+  const last = player.colorHistory[player.colorHistory.length - 1];
+  const secondLast = player.colorHistory[player.colorHistory.length - 2];
+  return last !== 'BYE' && last === secondLast;
+}
+
+/**
+ * Determine which player should be white based on FIDE color balancing rules
+ * Returns true if player1 should be white, false if player2 should be white
+ */
+function determineColors(player1: Player, player2: Player): boolean {
+  // Rule 1: Strong due color (2 consecutive same colors)
+  const p1Consecutive = hasConsecutiveSameColor(player1);
+  const p2Consecutive = hasConsecutiveSameColor(player2);
+  
+  if (p1Consecutive && !p2Consecutive) {
+    // Player 1 had same color twice, must alternate
+    return getLastColor(player1) === 'B'; // If last was black, give white now
+  }
+  if (p2Consecutive && !p1Consecutive) {
+    // Player 2 had same color twice, must alternate
+    return getLastColor(player2) === 'W'; // If last was white, player1 gets white
+  }
+  
+  // Rule 2: Color balance (more whites/blacks overall)
+  const balance1 = getColorBalance(player1);
+  const balance2 = getColorBalance(player2);
+  
+  if (Math.abs(balance1 - balance2) >= 1) {
+    // Significant difference, give white to player with fewer whites
+    return balance1 < balance2; // Player with fewer whites gets white
+  }
+  
+  // Rule 3: Alternation preference
+  const last1 = getLastColor(player1);
+  const last2 = getLastColor(player2);
+  
+  if (last1 === 'B' && last2 === 'W') {
+    return true; // Player 1 gets white (had black last)
+  }
+  if (last1 === 'W' && last2 === 'B') {
+    return false; // Player 2 gets white (had black last)
+  }
+  
+  // Rule 4: Default - higher rated (or in our case, higher bounty) gets white
+  return player1.bounty >= player2.bounty;
+}
+
+/**
  * Generate Swiss pairings following standard Swiss rules
  * Round 1: Alphabetical order, then top half vs bottom half
  * Rounds 2+: By points (wins/draws), with bounty as tiebreaker
@@ -59,15 +129,20 @@ export function generateSwissPairings(
       if (player2Index < sortedPlayers.length) {
         const player2 = sortedPlayers[player2Index];
         
+        // Determine colors based on FIDE rules
+        const player1IsWhite = determineColors(player1, player2);
+        
         // Pair them
         paired.add(player1.id);
         paired.add(player2.id);
         
         games.push({
-          id: `R${roundNumber}-${player1.id}-${player2.id}`,
+          id: player1IsWhite 
+            ? `R${roundNumber}-${player1.id}-${player2.id}`
+            : `R${roundNumber}-${player2.id}-${player1.id}`,
           roundNumber,
-          whitePlayerId: player1.id,
-          blackPlayerId: player2.id,
+          whitePlayerId: player1IsWhite ? player1.id : player2.id,
+          blackPlayerId: player1IsWhite ? player2.id : player1.id,
           result: null,
           sheriffUsage: {
             white: false,
@@ -149,15 +224,20 @@ export function generateSwissPairings(
         continue;
       }
       
+      // Determine colors based on FIDE rules
+      const player1IsWhite = determineColors(player1, opponent);
+      
       // Create game
       paired.add(player1.id);
       paired.add(opponent.id);
       
       games.push({
-        id: `R${roundNumber}-${player1.id}-${opponent.id}`,
+        id: player1IsWhite
+          ? `R${roundNumber}-${player1.id}-${opponent.id}`
+          : `R${roundNumber}-${opponent.id}-${player1.id}`,
         roundNumber,
-        whitePlayerId: player1.id,
-        blackPlayerId: opponent.id,
+        whitePlayerId: player1IsWhite ? player1.id : opponent.id,
+        blackPlayerId: player1IsWhite ? opponent.id : player1.id,
         result: null,
         sheriffUsage: {
           white: false,

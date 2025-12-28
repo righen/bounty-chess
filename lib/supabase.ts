@@ -39,6 +39,7 @@ export type Database = {
           has_sheriff_badge: boolean;
           criminal_status: 'normal' | 'angry' | 'mad';
           opponent_ids: number[];
+          color_history: string[];
           created_at: string;
           updated_at: string;
         };

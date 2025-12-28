@@ -28,6 +28,9 @@ export interface Player {
   
   // Pairing tracking
   opponentIds: number[];
+  
+  // Color balancing (FIDE Swiss rules)
+  colorHistory: ('W' | 'B' | 'BYE')[]; // History of colors played each round
 }
 
 export interface SheriffUsage {

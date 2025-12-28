@@ -48,10 +48,10 @@ export function guessGender(name: string): Gender {
 /**
  * Parse CSV data into players
  */
-export function parseCSV(csvText: string): Omit<Player, 'age' | 'gender' | 'bounty' | 'hasSheriffBadge' | 'criminalStatus' | 'wins' | 'losses' | 'draws' | 'opponentIds'>[] {
+export function parseCSV(csvText: string): Omit<Player, 'age' | 'gender' | 'bounty' | 'hasSheriffBadge' | 'criminalStatus' | 'wins' | 'losses' | 'draws' | 'opponentIds' | 'colorHistory'>[] {
   // Handle both \n and \r\n line endings, and normalize spaces
   const lines = csvText.trim().split(/\r?\n/);
-  const players: Omit<Player, 'age' | 'gender' | 'bounty' | 'hasSheriffBadge' | 'criminalStatus' | 'wins' | 'losses' | 'draws' | 'opponentIds'>[] = [];
+  const players: Omit<Player, 'age' | 'gender' | 'bounty' | 'hasSheriffBadge' | 'criminalStatus' | 'wins' | 'losses' | 'draws' | 'opponentIds' | 'colorHistory'>[] = [];
   
   // Skip header row
   for (let i = 1; i < lines.length; i++) {
@@ -86,7 +86,7 @@ export function parseCSV(csvText: string): Omit<Player, 'age' | 'gender' | 'boun
 /**
  * Initialize players with game state
  */
-export function initializePlayers(rawPlayers: Omit<Player, 'age' | 'gender' | 'bounty' | 'hasSheriffBadge' | 'criminalStatus' | 'wins' | 'losses' | 'draws' | 'opponentIds'>[]): Player[] {
+export function initializePlayers(rawPlayers: Omit<Player, 'age' | 'gender' | 'bounty' | 'hasSheriffBadge' | 'criminalStatus' | 'wins' | 'losses' | 'draws' | 'opponentIds' | 'colorHistory'>[]): Player[] {
   const players = rawPlayers.map(p => ({
     ...p,
     age: calculateAge(p.birthdate),
@@ -98,6 +98,7 @@ export function initializePlayers(rawPlayers: Omit<Player, 'age' | 'gender' | 'b
     losses: 0,
     draws: 0,
     opponentIds: [],
+    colorHistory: [] as ('W' | 'B' | 'BYE')[],
   }));
   
   // Sort alphabetically by surname, then name

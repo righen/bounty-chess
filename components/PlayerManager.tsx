@@ -104,6 +104,7 @@ export default function PlayerManager({ players, onPlayersUpdate, tournamentStar
       losses: 0,
       draws: 0,
       opponentIds: [],
+      colorHistory: [],
     };
 
     onPlayersUpdate([...players, newPlayer]);
