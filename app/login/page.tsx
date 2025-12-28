@@ -97,9 +97,15 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 fullWidth
+                size="small"
                 autoComplete="email"
                 autoFocus
                 disabled={loading}
+                sx={{
+                  '& .MuiInputBase-root': {
+                    height: '48px',
+                  },
+                }}
               />
 
               <TextField
@@ -109,8 +115,14 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 fullWidth
+                size="small"
                 autoComplete="current-password"
                 disabled={loading}
+                sx={{
+                  '& .MuiInputBase-root': {
+                    height: '48px',
+                  },
+                }}
               />
 
               {error && (

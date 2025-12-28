@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Box,
   Card,
@@ -22,14 +23,21 @@ import {
   DialogContent,
   DialogActions,
   IconButton,
+  AppBar,
+  Toolbar,
+  CircularProgress,
 } from '@mui/material';
 import {
   Add as AddIcon,
   Delete as DeleteIcon,
   PersonAdd as PersonAddIcon,
+  ArrowBack as ArrowBackIcon,
+  Menu as MenuIcon,
 } from '@mui/icons-material';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import Sidebar from '@/components/Sidebar';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/lib/auth-context';
 
 interface UserProfile {
   id: string;
@@ -40,6 +48,9 @@ interface UserProfile {
 }
 
 export default function UserManagementPage() {
+  const router = useRouter();
+  const { profile } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -143,136 +154,200 @@ export default function UserManagementPage() {
 
   return (
     <ProtectedRoute requireAdmin>
-      <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto' }}>
-        <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main' }}>
-            👥 User Management
-          </Typography>
-          <Button
-            variant="contained"
-            color="secondary"
-            startIcon={<PersonAddIcon />}
-            onClick={() => setDialogOpen(true)}
+      <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+        {/* Sidebar */}
+        <Sidebar
+          sidebarOpen={sidebarOpen}
+          view="players" // No matching view, but required prop
+          onViewChange={() => {}} // Not used here
+          onReset={() => {}} // Not used here
+          onExport={() => {}} // Not used here
+          onImport={() => {}} // Not used here
+          tournamentStarted={false}
+          playersCount={0}
+          currentRound={0}
+          totalRounds={9}
+          userRole={profile?.role || null}
+        />
+
+        {/* Main Content */}
+        <Box 
+          component="main" 
+          sx={{ 
+            flexGrow: 1,
+            width: '100%',
+            minHeight: '100vh',
+            bgcolor: 'grey.50',
+          }}
+        >
+          {/* Header */}
+          <AppBar 
+            position="sticky" 
+            color="inherit" 
+            elevation={1}
+            sx={{ 
+              bgcolor: 'background.paper',
+            }}
           >
-            Create Arbiter
-          </Button>
-        </Box>
+            <Toolbar>
+              <IconButton
+                edge="start"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                sx={{ mr: 2 }}
+              >
+                <MenuIcon />
+              </IconButton>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
+              <IconButton
+                edge="start"
+                onClick={() => router.push('/')}
+                sx={{ mr: 2 }}
+              >
+                <ArrowBackIcon />
+              </IconButton>
 
-        {success && (
-          <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(null)}>
-            {success}
-          </Alert>
-        )}
+              <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
+                👥 User Management
+              </Typography>
 
-        <Card>
-          <CardContent>
-            <TableContainer component={Paper} elevation={0}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell><strong>Email</strong></TableCell>
-                    <TableCell><strong>Full Name</strong></TableCell>
-                    <TableCell><strong>Role</strong></TableCell>
-                    <TableCell><strong>Created</strong></TableCell>
-                    <TableCell align="right"><strong>Actions</strong></TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell colSpan={5} align="center">
-                        Loading...
-                      </TableCell>
-                    </TableRow>
-                  ) : users.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={5} align="center">
-                        No users found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    users.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell>{user.email}</TableCell>
-                        <TableCell>{user.full_name || '—'}</TableCell>
-                        <TableCell>
-                          <Chip
-                            label={user.role === 'admin' ? 'Administrator' : 'Arbiter'}
-                            color={user.role === 'admin' ? 'secondary' : 'info'}
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          {new Date(user.created_at).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell align="right">
-                          {user.role !== 'admin' && (
-                            <IconButton
-                              color="error"
-                              size="small"
-                              onClick={() => handleDeleteUser(user.id, user.email)}
-                            >
-                              <DeleteIcon />
-                            </IconButton>
-                          )}
-                        </TableCell>
+              <Button
+                variant="contained"
+                color="secondary"
+                startIcon={<PersonAddIcon />}
+                onClick={() => setDialogOpen(true)}
+              >
+                Create Arbiter
+              </Button>
+            </Toolbar>
+          </AppBar>
+
+          {/* Content */}
+          <Box sx={{ p: { xs: 2, sm: 3, lg: 4 }, maxWidth: '100%' }}>
+            {error && (
+              <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
+                {error}
+              </Alert>
+            )}
+
+            {success && (
+              <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess(null)}>
+                {success}
+              </Alert>
+            )}
+
+            <Card>
+              <CardContent>
+                <TableContainer component={Paper} elevation={0}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell><strong>Email</strong></TableCell>
+                        <TableCell><strong>Full Name</strong></TableCell>
+                        <TableCell><strong>Role</strong></TableCell>
+                        <TableCell><strong>Created</strong></TableCell>
+                        <TableCell align="right"><strong>Actions</strong></TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </CardContent>
-        </Card>
+                    </TableHead>
+                    <TableBody>
+                      {loading ? (
+                        <TableRow>
+                          <TableCell colSpan={5} align="center">
+                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', py: 3 }}>
+                              <CircularProgress size={24} sx={{ mr: 2 }} />
+                              <Typography>Loading users...</Typography>
+                            </Box>
+                          </TableCell>
+                        </TableRow>
+                      ) : users.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} align="center">
+                            <Typography color="text.secondary" sx={{ py: 3 }}>
+                              No users found
+                            </Typography>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        users.map((user) => (
+                          <TableRow key={user.id}>
+                            <TableCell>{user.email}</TableCell>
+                            <TableCell>{user.full_name || '—'}</TableCell>
+                            <TableCell>
+                              <Chip
+                                label={user.role === 'admin' ? 'Administrator' : 'Arbiter'}
+                                color={user.role === 'admin' ? 'secondary' : 'info'}
+                                size="small"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              {new Date(user.created_at).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell align="right">
+                              {user.role !== 'admin' && (
+                                <IconButton
+                                  color="error"
+                                  size="small"
+                                  onClick={() => handleDeleteUser(user.id, user.email)}
+                                >
+                                  <DeleteIcon />
+                                </IconButton>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </CardContent>
+            </Card>
 
-        {/* Create User Dialog */}
-        <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-          <DialogTitle>Create New Arbiter</DialogTitle>
-          <DialogContent>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
-              <TextField
-                label="Email"
-                type="email"
-                value={newUser.email}
-                onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                fullWidth
-                required
-              />
-              <TextField
-                label="Password"
-                type="password"
-                value={newUser.password}
-                onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                fullWidth
-                required
-                helperText="Minimum 6 characters"
-              />
-              <TextField
-                label="Full Name (Optional)"
-                value={newUser.fullName}
-                onChange={(e) => setNewUser({ ...newUser, fullName: e.target.value })}
-                fullWidth
-              />
-            </Box>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button
-              variant="contained"
-              color="secondary"
-              onClick={handleCreateUser}
-              disabled={!newUser.email || !newUser.password}
-            >
-              Create Arbiter
-            </Button>
-          </DialogActions>
-        </Dialog>
+            {/* Create User Dialog */}
+            <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+              <DialogTitle>Create New Arbiter</DialogTitle>
+              <DialogContent>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
+                  <TextField
+                    label="Email"
+                    type="email"
+                    value={newUser.email}
+                    onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                    fullWidth
+                    required
+                    size="small"
+                  />
+                  <TextField
+                    label="Password"
+                    type="password"
+                    value={newUser.password}
+                    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                    fullWidth
+                    required
+                    size="small"
+                    helperText="Minimum 6 characters"
+                  />
+                  <TextField
+                    label="Full Name (Optional)"
+                    value={newUser.fullName}
+                    onChange={(e) => setNewUser({ ...newUser, fullName: e.target.value })}
+                    fullWidth
+                    size="small"
+                  />
+                </Box>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  onClick={handleCreateUser}
+                  disabled={!newUser.email || !newUser.password}
+                >
+                  Create Arbiter
+                </Button>
+              </DialogActions>
+            </Dialog>
+          </Box>
+        </Box>
       </Box>
     </ProtectedRoute>
   );
