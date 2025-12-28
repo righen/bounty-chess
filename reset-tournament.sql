@@ -11,17 +11,13 @@ DELETE FROM rounds;
 -- 3. Delete all players (optional - comment out if you want to keep players)
 DELETE FROM players;
 
--- 4. Reset tournament status (update first row, or all if multiple exist)
-UPDATE tournament
-SET 
-  current_round = 0,
-  tournament_started = false,
-  total_rounds = 9;
+-- 4. Delete all tournament rows first (clean slate)
+DELETE FROM tournament;
 
--- 5. If no tournament row exists, create one with generated UUID
-INSERT INTO tournament (current_round, total_rounds, tournament_started)
-SELECT 0, 9, false
-WHERE NOT EXISTS (SELECT 1 FROM tournament);
+-- 5. Insert tournament row with the EXACT UUID the app expects
+-- The app is hardcoded to look for this specific UUID
+INSERT INTO tournament (id, current_round, total_rounds, tournament_started)
+VALUES ('00000000-0000-0000-0000-000000000001'::uuid, 0, 9, false);
 
 -- Verify reset
 SELECT * FROM tournament;
