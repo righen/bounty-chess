@@ -1,26 +1,27 @@
 import { supabase } from './supabase';
 
 export interface PlayerPoolRecord {
-  id: string;
+  id: number;
   name: string;
   surname: string;
+  email: string | null;
+  phone: string | null;
   birthdate: string | null;
   age: number | null;
   gender: 'M' | 'F' | null;
-  contact_phone: string | null;
-  contact_email: string | null;
+  rating: number | null;
   fide_id: string | null;
-  fide_rating: number | null;
-  national_rating: number | null;
-  club_affiliation: string | null;
-  tournaments_played: number;
-  total_wins: number;
-  total_losses: number;
-  total_draws: number;
-  highest_bounty: number;
+  national_id: string | null;
+  photo_url: string | null;
   notes: string | null;
-  is_active: boolean;
-  is_banned: boolean;
+  tournaments_played: number;
+  total_games: number;
+  total_wins: number;
+  total_draws: number;
+  total_losses: number;
+  active: boolean;
+  banned: boolean;
+  ban_reason: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -28,18 +29,19 @@ export interface PlayerPoolRecord {
 export interface PlayerPoolInput {
   name: string;
   surname: string;
+  email?: string;
+  phone?: string;
   birthdate?: string;
   age?: number;
   gender?: 'M' | 'F';
-  contact_phone?: string;
-  contact_email?: string;
+  rating?: number;
   fide_id?: string;
-  fide_rating?: number;
-  national_rating?: number;
-  club_affiliation?: string;
+  national_id?: string;
+  photo_url?: string;
   notes?: string;
-  is_active?: boolean;
-  is_banned?: boolean;
+  active?: boolean;
+  banned?: boolean;
+  ban_reason?: string;
 }
 
 /**
@@ -64,7 +66,7 @@ export async function loadPlayerPool(): Promise<PlayerPoolRecord[]> {
 /**
  * Get a single player from the pool by ID
  */
-export async function getPlayerFromPool(id: string): Promise<PlayerPoolRecord | null> {
+export async function getPlayerFromPool(id: number): Promise<PlayerPoolRecord | null> {
   try {
     const { data, error } = await supabase
       .from('player_pool')
@@ -90,18 +92,19 @@ export async function addPlayerToPool(player: PlayerPoolInput): Promise<PlayerPo
       .insert([{
         name: player.name,
         surname: player.surname,
+        email: player.email || null,
+        phone: player.phone || null,
         birthdate: player.birthdate || null,
         age: player.age || null,
         gender: player.gender || null,
-        contact_phone: player.contact_phone || null,
-        contact_email: player.contact_email || null,
+        rating: player.rating || null,
         fide_id: player.fide_id || null,
-        fide_rating: player.fide_rating || null,
-        national_rating: player.national_rating || null,
-        club_affiliation: player.club_affiliation || null,
+        national_id: player.national_id || null,
+        photo_url: player.photo_url || null,
         notes: player.notes || null,
-        is_active: player.is_active !== undefined ? player.is_active : true,
-        is_banned: player.is_banned !== undefined ? player.is_banned : false,
+        active: player.active !== undefined ? player.active : true,
+        banned: player.banned !== undefined ? player.banned : false,
+        ban_reason: player.ban_reason || null,
       }])
       .select()
       .single();
@@ -117,24 +120,25 @@ export async function addPlayerToPool(player: PlayerPoolInput): Promise<PlayerPo
 /**
  * Update a player in the pool
  */
-export async function updatePlayerInPool(id: string, player: Partial<PlayerPoolInput>): Promise<PlayerPoolRecord> {
+export async function updatePlayerInPool(id: number, player: Partial<PlayerPoolInput>): Promise<PlayerPoolRecord> {
   try {
     const updateData: any = {};
     
     if (player.name !== undefined) updateData.name = player.name;
     if (player.surname !== undefined) updateData.surname = player.surname;
+    if (player.email !== undefined) updateData.email = player.email || null;
+    if (player.phone !== undefined) updateData.phone = player.phone || null;
     if (player.birthdate !== undefined) updateData.birthdate = player.birthdate || null;
     if (player.age !== undefined) updateData.age = player.age || null;
     if (player.gender !== undefined) updateData.gender = player.gender || null;
-    if (player.contact_phone !== undefined) updateData.contact_phone = player.contact_phone || null;
-    if (player.contact_email !== undefined) updateData.contact_email = player.contact_email || null;
+    if (player.rating !== undefined) updateData.rating = player.rating || null;
     if (player.fide_id !== undefined) updateData.fide_id = player.fide_id || null;
-    if (player.fide_rating !== undefined) updateData.fide_rating = player.fide_rating || null;
-    if (player.national_rating !== undefined) updateData.national_rating = player.national_rating || null;
-    if (player.club_affiliation !== undefined) updateData.club_affiliation = player.club_affiliation || null;
+    if (player.national_id !== undefined) updateData.national_id = player.national_id || null;
+    if (player.photo_url !== undefined) updateData.photo_url = player.photo_url || null;
     if (player.notes !== undefined) updateData.notes = player.notes || null;
-    if (player.is_active !== undefined) updateData.is_active = player.is_active;
-    if (player.is_banned !== undefined) updateData.is_banned = player.is_banned;
+    if (player.active !== undefined) updateData.active = player.active;
+    if (player.banned !== undefined) updateData.banned = player.banned;
+    if (player.ban_reason !== undefined) updateData.ban_reason = player.ban_reason || null;
 
     updateData.updated_at = new Date().toISOString();
 
@@ -156,7 +160,7 @@ export async function updatePlayerInPool(id: string, player: Partial<PlayerPoolI
 /**
  * Delete a player from the pool
  */
-export async function deletePlayerFromPool(id: string): Promise<void> {
+export async function deletePlayerFromPool(id: number): Promise<void> {
   try {
     const { error } = await supabase
       .from('player_pool')
@@ -178,7 +182,7 @@ export async function searchPlayerPool(query: string): Promise<PlayerPoolRecord[
     const { data, error } = await supabase
       .from('player_pool')
       .select('*')
-      .or(`name.ilike.%${query}%,surname.ilike.%${query}%,contact_email.ilike.%${query}%`)
+      .or(`name.ilike.%${query}%,surname.ilike.%${query}%,email.ilike.%${query}%,fide_id.ilike.%${query}%`)
       .order('surname')
       .order('name');
 
@@ -222,21 +226,21 @@ export async function getPlayerPoolStats(): Promise<{
   total: number;
   active: number;
   banned: number;
-  withFideRating: number;
+  withRating: number;
 }> {
   try {
     const { data, error } = await supabase
       .from('player_pool')
-      .select('id, is_active, is_banned, fide_rating');
+      .select('id, active, banned, rating');
 
     if (error) throw error;
 
     const total = data?.length || 0;
-    const active = data?.filter(p => p.is_active && !p.is_banned).length || 0;
-    const banned = data?.filter(p => p.is_banned).length || 0;
-    const withFideRating = data?.filter(p => p.fide_rating && p.fide_rating > 0).length || 0;
+    const active = data?.filter(p => p.active && !p.banned).length || 0;
+    const banned = data?.filter(p => p.banned).length || 0;
+    const withRating = data?.filter(p => p.rating && p.rating > 0).length || 0;
 
-    return { total, active, banned, withFideRating };
+    return { total, active, banned, withRating };
   } catch (error) {
     console.error('Error getting player pool stats:', error);
     throw error;

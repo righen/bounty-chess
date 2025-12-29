@@ -66,7 +66,7 @@ function PlayerPoolPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [stats, setStats] = useState({ total: 0, active: 0, banned: 0, withFideRating: 0 });
+  const [stats, setStats] = useState({ total: 0, active: 0, banned: 0, withRating: 0 });
   
   // Dialog states
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -78,18 +78,17 @@ function PlayerPoolPage() {
   const [formData, setFormData] = useState<PlayerPoolInput>({
     name: '',
     surname: '',
+    email: '',
+    phone: '',
     birthdate: '',
     age: undefined,
     gender: undefined,
-    contact_phone: '',
-    contact_email: '',
+    rating: undefined,
     fide_id: '',
-    fide_rating: undefined,
-    national_rating: undefined,
-    club_affiliation: '',
+    national_id: '',
     notes: '',
-    is_active: true,
-    is_banned: false,
+    active: true,
+    banned: false,
   });
 
   // Snackbar
@@ -114,7 +113,7 @@ function PlayerPoolPage() {
         (p) =>
           p.name.toLowerCase().includes(query) ||
           p.surname.toLowerCase().includes(query) ||
-          (p.contact_email && p.contact_email.toLowerCase().includes(query)) ||
+          (p.email && p.email.toLowerCase().includes(query)) ||
           (p.fide_id && p.fide_id.toLowerCase().includes(query))
       );
       setFilteredPlayers(filtered);
@@ -150,36 +149,35 @@ function PlayerPoolPage() {
       setFormData({
         name: player.name,
         surname: player.surname,
+        email: player.email || '',
+        phone: player.phone || '',
         birthdate: player.birthdate || '',
         age: player.age || undefined,
         gender: player.gender || undefined,
-        contact_phone: player.contact_phone || '',
-        contact_email: player.contact_email || '',
+        rating: player.rating || undefined,
         fide_id: player.fide_id || '',
-        fide_rating: player.fide_rating || undefined,
-        national_rating: player.national_rating || undefined,
-        club_affiliation: player.club_affiliation || '',
+        national_id: player.national_id || '',
         notes: player.notes || '',
-        is_active: player.is_active,
-        is_banned: player.is_banned,
+        active: player.active,
+        banned: player.banned,
+        ban_reason: player.ban_reason || '',
       });
     } else {
       setEditingPlayer(null);
       setFormData({
         name: '',
         surname: '',
+        email: '',
+        phone: '',
         birthdate: '',
         age: undefined,
         gender: undefined,
-        contact_phone: '',
-        contact_email: '',
+        rating: undefined,
         fide_id: '',
-        fide_rating: undefined,
-        national_rating: undefined,
-        club_affiliation: '',
+        national_id: '',
         notes: '',
-        is_active: true,
-        is_banned: false,
+        active: true,
+        banned: false,
       });
     }
     setDialogOpen(true);
@@ -253,15 +251,14 @@ function PlayerPoolPage() {
           const player: PlayerPoolInput = {
             name: values[headers.indexOf('name')] || '',
             surname: values[headers.indexOf('surname')] || '',
+            email: values[headers.indexOf('email')] || '',
+            phone: values[headers.indexOf('phone')] || '',
             birthdate: values[headers.indexOf('birthdate')] || undefined,
             age: parseInt(values[headers.indexOf('age')]) || undefined,
             gender: (values[headers.indexOf('gender')]?.toUpperCase() as 'M' | 'F') || undefined,
-            contact_phone: values[headers.indexOf('phone')] || values[headers.indexOf('contact_phone')] || '',
-            contact_email: values[headers.indexOf('email')] || values[headers.indexOf('contact_email')] || '',
+            rating: parseInt(values[headers.indexOf('rating')]) || undefined,
             fide_id: values[headers.indexOf('fide_id')] || '',
-            fide_rating: parseInt(values[headers.indexOf('fide_rating')]) || undefined,
-            national_rating: parseInt(values[headers.indexOf('national_rating')]) || undefined,
-            club_affiliation: values[headers.indexOf('club')] || values[headers.indexOf('club_affiliation')] || '',
+            national_id: values[headers.indexOf('national_id')] || '',
             notes: values[headers.indexOf('notes')] || '',
           };
           
@@ -282,29 +279,28 @@ function PlayerPoolPage() {
   };
 
   const handleCSVExport = () => {
-    const headers = ['name', 'surname', 'birthdate', 'age', 'gender', 'contact_phone', 'contact_email', 'fide_id', 'fide_rating', 'national_rating', 'club_affiliation', 'tournaments_played', 'total_wins', 'total_losses', 'total_draws', 'highest_bounty', 'notes', 'is_active', 'is_banned'];
+    const headers = ['name', 'surname', 'email', 'phone', 'birthdate', 'age', 'gender', 'rating', 'fide_id', 'national_id', 'tournaments_played', 'total_games', 'total_wins', 'total_draws', 'total_losses', 'notes', 'active', 'banned'];
     const csv = [
       headers.join(','),
       ...players.map(p => [
         p.name,
         p.surname,
+        p.email || '',
+        p.phone || '',
         p.birthdate || '',
         p.age || '',
         p.gender || '',
-        p.contact_phone || '',
-        p.contact_email || '',
+        p.rating || '',
         p.fide_id || '',
-        p.fide_rating || '',
-        p.national_rating || '',
-        p.club_affiliation || '',
+        p.national_id || '',
         p.tournaments_played,
+        p.total_games,
         p.total_wins,
-        p.total_losses,
         p.total_draws,
-        p.highest_bounty,
+        p.total_losses,
         p.notes || '',
-        p.is_active,
-        p.is_banned,
+        p.active,
+        p.banned,
       ].join(','))
     ].join('\n');
 
@@ -426,10 +422,10 @@ function PlayerPoolPage() {
               <TrophyIcon sx={{ fontSize: 40, color: 'warning.main' }} />
               <Box>
                 <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-                  {stats.withFideRating}
+                  {stats.withRating}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  With FIDE Rating
+                  With Rating
                 </Typography>
               </Box>
             </Box>
@@ -481,38 +477,29 @@ function PlayerPoolPage() {
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>
                         {player.name} {player.surname}
                       </Typography>
-                      {player.club_affiliation && (
-                        <Typography variant="caption" color="text.secondary">
-                          {player.club_affiliation}
-                        </Typography>
-                      )}
                     </TableCell>
                     <TableCell>{player.gender || '-'}</TableCell>
                     <TableCell>{player.age || '-'}</TableCell>
                     <TableCell>
-                      {player.contact_email && (
-                        <Typography variant="body2">{player.contact_email}</Typography>
+                      {player.email && (
+                        <Typography variant="body2">{player.email}</Typography>
                       )}
-                      {player.contact_phone && (
+                      {player.phone && (
                         <Typography variant="caption" color="text.secondary">
-                          {player.contact_phone}
+                          {player.phone}
                         </Typography>
                       )}
-                      {!player.contact_email && !player.contact_phone && '-'}
+                      {!player.email && !player.phone && '-'}
                     </TableCell>
                     <TableCell>{player.fide_id || '-'}</TableCell>
                     <TableCell>
-                      {player.fide_rating && (
+                      {player.rating ? (
                         <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                          {player.fide_rating}
+                          {player.rating}
                         </Typography>
+                      ) : (
+                        '-'
                       )}
-                      {player.national_rating && (
-                        <Typography variant="caption" color="text.secondary">
-                          National: {player.national_rating}
-                        </Typography>
-                      )}
-                      {!player.fide_rating && !player.national_rating && '-'}
                     </TableCell>
                     <TableCell>{player.tournaments_played}</TableCell>
                     <TableCell>
@@ -522,9 +509,9 @@ function PlayerPoolPage() {
                     </TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', gap: 0.5 }}>
-                        {player.is_banned ? (
+                        {player.banned ? (
                           <Chip label="Banned" color="error" size="small" />
-                        ) : player.is_active ? (
+                        ) : player.active ? (
                           <Chip label="Active" color="success" size="small" />
                         ) : (
                           <Chip label="Inactive" color="default" size="small" />
@@ -624,21 +611,15 @@ function PlayerPoolPage() {
             <TextField
               fullWidth
               label="Phone"
-              value={formData.contact_phone}
-              onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })}
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
             />
             <TextField
               fullWidth
               label="Email"
               type="email"
-              value={formData.contact_email}
-              onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
-            />
-            <TextField
-              fullWidth
-              label="Club Affiliation"
-              value={formData.club_affiliation}
-              onChange={(e) => setFormData({ ...formData, club_affiliation: e.target.value })}
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
           </Box>
           
@@ -658,17 +639,16 @@ function PlayerPoolPage() {
             />
             <TextField
               fullWidth
-              label="FIDE Rating"
-              type="number"
-              value={formData.fide_rating || ''}
-              onChange={(e) => setFormData({ ...formData, fide_rating: parseInt(e.target.value) || undefined })}
+              label="National ID"
+              value={formData.national_id}
+              onChange={(e) => setFormData({ ...formData, national_id: e.target.value })}
             />
             <TextField
               fullWidth
-              label="National Rating"
+              label="Rating"
               type="number"
-              value={formData.national_rating || ''}
-              onChange={(e) => setFormData({ ...formData, national_rating: parseInt(e.target.value) || undefined })}
+              value={formData.rating || ''}
+              onChange={(e) => setFormData({ ...formData, rating: parseInt(e.target.value) || undefined })}
             />
           </Box>
 
@@ -694,8 +674,8 @@ function PlayerPoolPage() {
               fullWidth
               select
               label="Status"
-              value={formData.is_active ? 'active' : 'inactive'}
-              onChange={(e) => setFormData({ ...formData, is_active: e.target.value === 'active' })}
+              value={formData.active ? 'active' : 'inactive'}
+              onChange={(e) => setFormData({ ...formData, active: e.target.value === 'active' })}
             >
               <MenuItem value="active">Active</MenuItem>
               <MenuItem value="inactive">Inactive</MenuItem>
@@ -704,8 +684,8 @@ function PlayerPoolPage() {
               fullWidth
               select
               label="Ban Status"
-              value={formData.is_banned ? 'banned' : 'not_banned'}
-              onChange={(e) => setFormData({ ...formData, is_banned: e.target.value === 'banned' })}
+              value={formData.banned ? 'banned' : 'not_banned'}
+              onChange={(e) => setFormData({ ...formData, banned: e.target.value === 'banned' })}
             >
               <MenuItem value="not_banned">Not Banned</MenuItem>
               <MenuItem value="banned">Banned</MenuItem>
