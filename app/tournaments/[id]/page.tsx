@@ -211,7 +211,7 @@ function TournamentDetailPage() {
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       {/* Header */}
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <IconButton onClick={() => router.push('/dashboard')}>
             <BackIcon />
@@ -225,13 +225,21 @@ function TournamentDetailPage() {
             </Typography>
           </Box>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => setAddPlayerDialog(true)}
-        >
-          Add Players
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="outlined"
+            onClick={() => router.push(`/tournaments/${tournamentId}/check-in`)}
+          >
+            Check-In
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setAddPlayerDialog(true)}
+          >
+            Add Players
+          </Button>
+        </Box>
       </Box>
 
       {/* Statistics Cards */}
