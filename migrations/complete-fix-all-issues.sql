@@ -44,7 +44,7 @@ ALTER TABLE tournament_registrations
   REFERENCES player_pool(id) 
   ON DELETE CASCADE;
 
-RAISE NOTICE '✅ Foreign keys fixed!';
+DO $$ BEGIN RAISE NOTICE '✅ Foreign keys fixed!'; END $$;
 
 -- ============================================================================
 -- PART 2: Ensure All Required Columns Exist
@@ -101,6 +101,8 @@ BEGIN
 
   RAISE NOTICE '✅ All columns added!';
 END $$;
+
+DO $$ BEGIN RAISE NOTICE 'Starting RLS policy fixes...'; END $$;
 
 -- ============================================================================
 -- PART 3: Fix RLS Policies
@@ -229,7 +231,7 @@ CREATE POLICY "player_pool_delete_policy"
     )
   );
 
-RAISE NOTICE '✅ RLS policies fixed!';
+DO $$ BEGIN RAISE NOTICE '✅ RLS policies fixed!'; END $$;
 
 -- ============================================================================
 -- PART 4: Create Indexes for Performance
@@ -250,7 +252,7 @@ CREATE INDEX IF NOT EXISTS idx_player_pool_name
 CREATE INDEX IF NOT EXISTS idx_tournaments_start_date 
   ON tournaments(start_date DESC);
 
-RAISE NOTICE '✅ Indexes created!';
+DO $$ BEGIN RAISE NOTICE '✅ Indexes created!'; END $$;
 
 -- ============================================================================
 -- PART 5: Test Everything
