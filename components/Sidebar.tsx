@@ -25,6 +25,7 @@ import {
   Logout as LogoutIcon,
   ManageAccounts as ManageAccountsIcon,
   PersonAdd as PlayerPoolIcon,
+  Dashboard as DashboardIcon,
 } from '@mui/icons-material';
 import { useAuth, UserRole } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
@@ -143,6 +144,25 @@ export default function Sidebar({
           {userRole === 'admin' && (
             <>
               <Divider sx={{ my: 2, bgcolor: 'rgba(255,255,255,0.1)' }} />
+
+              <ListItem disablePadding sx={{ mb: 1 }}>
+                <ListItemButton
+                  onClick={() => router.push('/dashboard')}
+                  sx={{
+                    borderRadius: 1,
+                    color: 'white',
+                    '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' },
+                  }}
+                >
+                  <ListItemIcon sx={{ color: 'secondary.main', minWidth: 40 }}>
+                    <DashboardIcon />
+                  </ListItemIcon>
+                  <ListItemText 
+                    primary="Dashboard" 
+                    primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500 }}
+                  />
+                </ListItemButton>
+              </ListItem>
 
               <ListItem disablePadding sx={{ mb: 1 }}>
                 <ListItemButton
