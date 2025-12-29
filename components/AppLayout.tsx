@@ -9,8 +9,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const pathname = usePathname();
 
-  // Don't show sidebar on login or public pages
-  const showSidebar = user && pathname !== '/login' && !pathname?.startsWith('/public');
+  // Don't show sidebar on:
+  // - Login page
+  // - Public pages
+  // - Old tournament system root page (/) - it has its own sidebar
+  const showSidebar = user && 
+    pathname !== '/login' && 
+    pathname !== '/' &&
+    !pathname?.startsWith('/public');
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
@@ -21,6 +27,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           flexGrow: 1,
           width: showSidebar ? 'calc(100% - 280px)' : '100%',
           transition: 'width 0.3s ease',
+          ml: 0, // Remove any margin that might cause gaps
         }}
       >
         {children}

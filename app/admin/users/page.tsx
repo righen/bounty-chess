@@ -31,11 +31,8 @@ import {
   Add as AddIcon,
   Delete as DeleteIcon,
   PersonAdd as PersonAddIcon,
-  ArrowBack as ArrowBackIcon,
-  Menu as MenuIcon,
 } from '@mui/icons-material';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import Sidebar from '@/components/Sidebar';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
 
@@ -50,7 +47,6 @@ interface UserProfile {
 export default function UserManagementPage() {
   const router = useRouter();
   const { profile } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -154,57 +150,17 @@ export default function UserManagementPage() {
 
   return (
     <ProtectedRoute requireAdmin>
-      <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-        {/* Sidebar */}
-        <Sidebar
-          sidebarOpen={sidebarOpen}
-          view="players" // No matching view, but required prop
-          onViewChange={() => {}} // Not used here
-          onReset={() => {}} // Not used here
-          onExport={() => {}} // Not used here
-          onImport={() => {}} // Not used here
-          tournamentStarted={false}
-          playersCount={0}
-          currentRound={0}
-          totalRounds={9}
-          userRole={profile?.role || null}
-        />
-
-        {/* Main Content */}
-        <Box 
-          component="main" 
+      <Box sx={{ minHeight: '100vh', bgcolor: 'grey.50' }}>
+        {/* Header */}
+        <AppBar 
+          position="sticky" 
+          color="inherit" 
+          elevation={1}
           sx={{ 
-            flexGrow: 1,
-            width: '100%',
-            minHeight: '100vh',
-            bgcolor: 'grey.50',
+            bgcolor: 'background.paper',
           }}
         >
-          {/* Header */}
-          <AppBar 
-            position="sticky" 
-            color="inherit" 
-            elevation={1}
-            sx={{ 
-              bgcolor: 'background.paper',
-            }}
-          >
-            <Toolbar>
-              <IconButton
-                edge="start"
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                sx={{ mr: 2 }}
-              >
-                <MenuIcon />
-              </IconButton>
-
-              <IconButton
-                edge="start"
-                onClick={() => router.push('/')}
-                sx={{ mr: 2 }}
-              >
-                <ArrowBackIcon />
-              </IconButton>
+          <Toolbar>
 
               <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
                 👥 User Management
@@ -347,7 +303,6 @@ export default function UserManagementPage() {
               </DialogActions>
             </Dialog>
           </Box>
-        </Box>
       </Box>
     </ProtectedRoute>
   );
