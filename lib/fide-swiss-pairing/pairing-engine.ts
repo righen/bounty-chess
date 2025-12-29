@@ -198,9 +198,11 @@ function toBracketPlayer(
   currentRound: number,
   totalRounds: number
 ): BracketPlayer {
+  // Calculate player score from wins and draws
+  const playerScore = player.wins + (player.draws * 0.5);
+  
   // Calculate if player is topscorer
   const maxPossibleScore = totalRounds;
-  const playerScore = calculatePlayerPoints(player);
   const isTopscorer = (currentRound === totalRounds) && 
                       (playerScore > maxPossibleScore * 0.5);
   
