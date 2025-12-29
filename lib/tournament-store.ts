@@ -48,27 +48,54 @@ export interface TournamentWithStats extends Tournament {
  */
 export async function loadTournaments(): Promise<TournamentWithStats[]> {
   try {
-    const { data, error } = await supabase
+    // First, get all tournaments
+    const { data: tournaments, error: tournamentsError } = await supabase
       .from('tournaments')
-      .select(`
-        *,
-        tournament_registrations(count),
-        games(count)
-      `)
+      .select('*')
       .order('start_date', { ascending: false });
 
-    if (error) throw error;
+    if (tournamentsError) {
+      console.error('Error loading tournaments:', tournamentsError);
+      throw tournamentsError;
+    }
+
+    if (!tournaments || tournaments.length === 0) {
+      return [];
+    }
+
+    // Get player counts for each tournament
+    const tournamentIds = tournaments.map(t => t.id);
+    const { data: registrations } = await supabase
+      .from('tournament_registrations')
+      .select('tournament_id')
+      .in('tournament_id', tournamentIds);
+
+    const { data: games } = await supabase
+      .from('games')
+      .select('tournament_id')
+      .in('tournament_id', tournamentIds);
+
+    // Count registrations and games per tournament
+    const registrationCounts = (registrations || []).reduce((acc: any, reg: any) => {
+      acc[reg.tournament_id] = (acc[reg.tournament_id] || 0) + 1;
+      return acc;
+    }, {});
+
+    const gameCounts = (games || []).reduce((acc: any, game: any) => {
+      acc[game.tournament_id] = (acc[game.tournament_id] || 0) + 1;
+      return acc;
+    }, {});
 
     // Transform data to include counts
-    const tournaments: TournamentWithStats[] = (data || []).map((t: any) => ({
+    const tournamentsWithStats: TournamentWithStats[] = tournaments.map((t: any) => ({
       ...t,
-      player_count: t.tournament_registrations?.[0]?.count || 0,
+      player_count: registrationCounts[t.id] || 0,
       checked_in_count: 0, // Will be calculated separately
       games_completed: 0, // Will be calculated separately
-      total_games: t.games?.[0]?.count || 0,
+      total_games: gameCounts[t.id] || 0,
     }));
 
-    return tournaments;
+    return tournamentsWithStats;
   } catch (error) {
     console.error('Error loading tournaments:', error);
     throw error;
