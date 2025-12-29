@@ -32,11 +32,11 @@ fide-swiss-pairing/
 | **Color Utilities** | ✅ Complete | A.6, E.1-E.5 |
 | **PSD Utilities** | ✅ Complete | A.8 |
 | **Float Utilities** | ✅ Complete | A.4, C.12-C.15 |
-| **Transpositions** | 🚧 In Progress | D.1 |
-| **Exchanges** | 🚧 In Progress | D.2, D.3 |
-| **Bracket Pairing** | 🚧 In Progress | B.1-B.8 |
-| **Candidate Evaluation** | 🚧 In Progress | C.1-C.19 |
-| **Main Engine** | 🚧 In Progress | A.9, Full algorithm |
+| **Transpositions** | ✅ Complete | D.1 |
+| **Exchanges** | ✅ Complete | D.2, D.3 |
+| **Bracket Pairing** | ✅ Complete | B.1-B.8 |
+| **Candidate Evaluation** | ⏳ Partial | C.1-C.19 |
+| **Main Engine** | 🚧 Next Phase | A.9, Full algorithm |
 
 ## Features
 
