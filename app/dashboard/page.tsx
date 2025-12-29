@@ -20,6 +20,11 @@ import {
   Tooltip,
   CircularProgress,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -32,6 +37,7 @@ import {
   Visibility as ViewIcon,
   PersonAdd as PersonAddIcon,
   Assessment as AssessmentIcon,
+  FlashOn as QuickSetupIcon,
 } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
@@ -43,6 +49,7 @@ import {
   getTournamentStats,
   deleteTournament,
 } from '@/lib/tournament-store';
+import { quickSetupTournament } from '@/lib/tournament-quick-setup';
 
 function DashboardPage() {
   const router = useRouter();
@@ -57,10 +64,32 @@ function DashboardPage() {
     activeRegistrations: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [quickSetupLoading, setQuickSetupLoading] = useState(false);
+  const [quickSetupDialog, setQuickSetupDialog] = useState(false);
 
   useEffect(() => {
     loadData();
   }, []);
+
+  const handleQuickSetup = async () => {
+    try {
+      setQuickSetupLoading(true);
+      const result = await quickSetupTournament({
+        autoRegisterAllPlayers: true,
+      });
+      
+      alert(`Tournament "${result.tournament.name}" created successfully!\n${result.playersRegistered} players registered.`);
+      setQuickSetupDialog(false);
+      loadData();
+      // Navigate to the new tournament
+      router.push(`/tournaments/${result.tournament.id}`);
+    } catch (error) {
+      console.error('Error in quick setup:', error);
+      alert('Failed to create tournament. Please try again.');
+    } finally {
+      setQuickSetupLoading(false);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -129,13 +158,23 @@ function DashboardPage() {
         <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
           Tournament Dashboard
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => router.push('/tournaments/create')}
-        >
-          New Tournament
-        </Button>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          <Button
+            variant="outlined"
+            startIcon={<QuickSetupIcon />}
+            onClick={() => setQuickSetupDialog(true)}
+            color="secondary"
+          >
+            Quick Setup
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => router.push('/tournaments/create')}
+          >
+            New Tournament
+          </Button>
+        </Box>
       </Box>
 
       {/* Statistics Cards */}
@@ -349,6 +388,40 @@ function DashboardPage() {
           </TableContainer>
         )}
       </Paper>
+
+      {/* Quick Setup Dialog */}
+      <Dialog open={quickSetupDialog} onClose={() => setQuickSetupDialog(false)}>
+        <DialogTitle>Quick Tournament Setup</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            This will create a new tournament with default settings and automatically register all active players from the player pool.
+            <br /><br />
+            <strong>Default Settings:</strong>
+            <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
+              <li>Format: Swiss System</li>
+              <li>Rounds: 9</li>
+              <li>Time Control: 30+0</li>
+              <li>Entry Fee: Free</li>
+              <li>Bounty System: Disabled</li>
+            </ul>
+            <br />
+            You can customize these settings after creation.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setQuickSetupDialog(false)} disabled={quickSetupLoading}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleQuickSetup}
+            variant="contained"
+            startIcon={quickSetupLoading ? <CircularProgress size={16} /> : <QuickSetupIcon />}
+            disabled={quickSetupLoading}
+          >
+            {quickSetupLoading ? 'Creating...' : 'Create Tournament'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }
