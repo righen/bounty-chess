@@ -9,7 +9,7 @@
  */
 
 import { Player } from '@/types';
-import { ByeEligibility, ByeAssignmentCriteria } from './types';
+import { ByeEligibility, ByeAssignmentCriteria, PlayerWithExtendedInfo } from './types';
 
 // ============================================================================
 // GAMES PLAYED CALCULATION
@@ -68,19 +68,20 @@ export function getGamesPlayedFromDB(
  * Check if player can receive BYE
  * FIDE C.2 - Enhanced with forfeit win check
  */
-export function canReceiveBye(player: Player): boolean {
-  // Already received BYE
-  if (player.receivedBye) {
+export function canReceiveBye(player: PlayerWithExtendedInfo): boolean {
+  // Check if player has BYE in color history
+  const hasBye = player.colorHistory.includes('BYE');
+  if (hasBye) {
     return false;
   }
   
   // Received forfeit win (NEW - FIDE C.2)
-  if ((player as any).receivedForfeitWin) {
+  if (player.receivedForfeitWin) {
     return false;
   }
   
   // Player is withdrawn
-  if ((player as any).withdrawn) {
+  if (player.withdrawn) {
     return false;
   }
   
@@ -90,8 +91,9 @@ export function canReceiveBye(player: Player): boolean {
 /**
  * Get BYE eligibility with reason
  */
-export function getByeEligibility(player: Player, gamesPlayed: number): ByeEligibility {
-  if (player.receivedBye) {
+export function getByeEligibility(player: PlayerWithExtendedInfo, gamesPlayed: number): ByeEligibility {
+  const hasBye = player.colorHistory.includes('BYE');
+  if (hasBye) {
     return {
       playerId: player.id,
       eligible: false,
@@ -100,7 +102,7 @@ export function getByeEligibility(player: Player, gamesPlayed: number): ByeEligi
     };
   }
   
-  if ((player as any).receivedForfeitWin) {
+  if (player.receivedForfeitWin) {
     return {
       playerId: player.id,
       eligible: false,
@@ -109,7 +111,7 @@ export function getByeEligibility(player: Player, gamesPlayed: number): ByeEligi
     };
   }
   
-  if ((player as any).withdrawn) {
+  if (player.withdrawn) {
     return {
       playerId: player.id,
       eligible: false,
@@ -143,9 +145,9 @@ export function getByeEligibility(player: Player, gamesPlayed: number): ByeEligi
  * 4. Highest TPN ✓
  */
 export function assignBye(
-  players: Player[],
+  players: PlayerWithExtendedInfo[],
   games: Array<{whitePlayerId: number; blackPlayerId: number; completed: boolean; forfeit?: boolean}>
-): Player | null {
+): PlayerWithExtendedInfo | null {
   // Filter eligible players
   const eligible = players.filter(p => canReceiveBye(p));
   
@@ -154,7 +156,7 @@ export function assignBye(
   }
   
   // Calculate criteria for each player
-  const criteria: Array<{ player: Player; criteria: ByeAssignmentCriteria }> = eligible.map(p => ({
+  const criteria: Array<{ player: PlayerWithExtendedInfo; criteria: ByeAssignmentCriteria }> = eligible.map(p => ({
     player: p,
     criteria: {
       score: p.wins + (p.draws * 0.5),
@@ -185,7 +187,7 @@ export function assignBye(
 /**
  * Assign BYE with simple algorithm (for testing)
  */
-export function assignByeSimple(players: Player[]): Player | null {
+export function assignByeSimple(players: PlayerWithExtendedInfo[]): PlayerWithExtendedInfo | null {
   const eligible = players
     .filter(p => canReceiveBye(p))
     .sort((a, b) => {
@@ -207,8 +209,8 @@ export function assignByeSimple(players: Player[]): Player | null {
  * Validate BYE assignment
  */
 export function validateByeAssignment(
-  player: Player,
-  allPlayers: Player[]
+  player: PlayerWithExtendedInfo,
+  allPlayers: PlayerWithExtendedInfo[]
 ): { valid: boolean; error?: string } {
   if (!canReceiveBye(player)) {
     return {
@@ -262,7 +264,7 @@ export function calculateByeStats(
     totalByeRound += game.roundNumber;
   }
   
-  const playersWithBye = players.filter(p => p.receivedBye).length;
+  const playersWithBye = players.filter(p => p.colorHistory.includes('BYE')).length;
   
   return {
     totalByes: byeGames.length,
@@ -291,10 +293,10 @@ export function formatByeEligibility(eligibility: ByeEligibility): string {
  * Get top BYE candidates (for UI display)
  */
 export function getTopByeCandidates(
-  players: Player[],
+  players: PlayerWithExtendedInfo[],
   games: Array<{whitePlayerId: number; blackPlayerId: number; completed: boolean; forfeit?: boolean}>,
   limit: number = 5
-): Array<{ player: Player; criteria: ByeAssignmentCriteria; rank: number }> {
+): Array<{ player: PlayerWithExtendedInfo; criteria: ByeAssignmentCriteria; rank: number }> {
   const eligible = players.filter(p => canReceiveBye(p));
   
   const criteria = eligible.map(p => ({

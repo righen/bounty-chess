@@ -274,7 +274,8 @@ export function canReceiveByeAfterForfeit(
   receivedForfeitWin: boolean
 ): boolean {
   // Already has BYE = cannot receive another
-  if (player.receivedBye) {
+  const hasBye = player.colorHistory.includes('BYE');
+  if (hasBye) {
     return false;
   }
   

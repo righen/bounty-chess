@@ -15,8 +15,9 @@ import {
   WithdrawnPlayer,
   WithdrawalResult,
   WithdrawalReason,
+  ForfeitResult,
 } from './types';
-import { ForfeitResult, handleNoShow } from './forfeit-handler';
+import { handleNoShow } from './forfeit-handler';
 
 // ============================================================================
 // WITHDRAWAL VALIDATION

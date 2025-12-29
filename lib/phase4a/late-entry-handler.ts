@@ -179,9 +179,7 @@ export function processLateEntry(
     age: request.player.age || 0,
     gender: request.player.gender || 'M',
     criminalStatus: 'normal',
-    hasSheriff: true,
-    sheriffUsed: false,
-    receivedBye: false,
+    hasSheriffBadge: true,
     colorHistory: [],
     opponentIds: [],
   };
@@ -289,7 +287,7 @@ export function formatLateEntryInfo(player: LateEntryPlayer): string {
 /**
  * Get late entry badge color
  */
-export function getLateEntryBadgeColor(roundsM issed: number): string {
+export function getLateEntryBadgeColor(roundsMissed: number): string {
   if (roundsMissed <= 1) return 'blue';
   if (roundsMissed <= 3) return 'yellow';
   return 'red';
