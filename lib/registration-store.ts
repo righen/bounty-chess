@@ -25,11 +25,12 @@ export interface RegistrationWithPlayer extends TournamentRegistration {
  */
 export async function getTournamentRegistrations(tournamentId: string): Promise<RegistrationWithPlayer[]> {
   try {
+    // Use explicit foreign key to avoid ambiguity
     const { data, error } = await supabase
       .from('tournament_registrations')
       .select(`
         *,
-        player:player_pool(*)
+        player:player_pool!tournament_registrations_player_id_fkey(*)
       `)
       .eq('tournament_id', tournamentId)
       .order('pairing_number');
