@@ -31,7 +31,6 @@ import {
   InputAdornment,
 } from '@mui/material';
 import {
-  ArrowBack as BackIcon,
   PersonAdd as AddIcon,
   Delete as DeleteIcon,
   CheckCircle as CheckIcon,
@@ -212,18 +211,13 @@ function TournamentDetailPage() {
     <Container maxWidth="xl" sx={{ py: 4 }}>
       {/* Header */}
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <IconButton onClick={() => router.push('/dashboard')}>
-            <BackIcon />
-          </IconButton>
-          <Box>
-            <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-              {tournament.name}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {tournament.location} • {new Date(tournament.start_date).toLocaleDateString()}
-            </Typography>
-          </Box>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+            {tournament.name}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {tournament.location} • {new Date(tournament.start_date).toLocaleDateString()}
+          </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 2 }}>
           <Button

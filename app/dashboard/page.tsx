@@ -129,22 +129,13 @@ function DashboardPage() {
         <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
           Tournament Dashboard
         </Typography>
-        <Box sx={{ display: 'flex', gap: 2 }}>
-          <Button
-            variant="outlined"
-            startIcon={<PersonAddIcon />}
-            onClick={() => router.push('/player-pool')}
-          >
-            Player Pool
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => router.push('/tournaments/create')}
-          >
-            New Tournament
-          </Button>
-        </Box>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => router.push('/tournaments/create')}
+        >
+          New Tournament
+        </Button>
       </Box>
 
       {/* Statistics Cards */}

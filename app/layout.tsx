@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import MuiRegistry from "@/components/MuiRegistry";
 import ClientLayout from "@/components/ClientLayout";
+import AppLayout from "@/components/AppLayout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,7 +32,9 @@ export default function RootLayout({
       >
         <MuiRegistry>
           <ClientLayout>
-            {children}
+            <AppLayout>
+              {children}
+            </AppLayout>
           </ClientLayout>
         </MuiRegistry>
       </body>

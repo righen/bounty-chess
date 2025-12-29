@@ -33,7 +33,6 @@ import {
   Tab,
 } from '@mui/material';
 import {
-  ArrowBack as BackIcon,
   CheckCircle as CheckInIcon,
   Cancel as CheckOutIcon,
   Payment as PaymentIcon,
@@ -351,18 +350,13 @@ function CheckInPage() {
     <Container maxWidth="xl" sx={{ py: 4 }}>
       {/* Header */}
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <IconButton onClick={() => router.push(`/tournaments/${tournamentId}`)}>
-            <BackIcon />
-          </IconButton>
-          <Box>
-            <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-              Check-In: {tournament.name}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Tournament Day Management
-            </Typography>
-          </Box>
+        <Box>
+          <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+            Check-In: {tournament.name}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Tournament Day Management
+          </Typography>
         </Box>
         <Button
           variant="contained"
