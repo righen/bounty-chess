@@ -6,6 +6,7 @@ export interface Tournament {
   location: string | null;
   start_date: string;
   end_date: string | null;
+  description: string | null;
   format: 'swiss' | 'round_robin' | 'knockout';
   total_rounds: number;
   current_round: number;
@@ -13,16 +14,16 @@ export interface Tournament {
   default_time_minutes: number;
   grace_period_minutes: number;
   bye_points: number;
-  initial_bounty: number;
+  initial_bounty: number | null; // Optional: for bounty tournaments
   entry_fee: number | null;
-  prize_fund: number | null;
+  prize_pool: number | null; // Fixed: was prize_fund
   status: 'draft' | 'registration' | 'ready' | 'in_progress' | 'completed' | 'cancelled';
   tournament_started: boolean;
   allow_late_entries: boolean;
   late_entry_deadline_round: number | null;
   created_at: string;
   updated_at: string;
-  organizer_id: string | null;
+  created_by: string | null;
 }
 
 export interface TournamentStats {
@@ -143,18 +144,19 @@ export async function createTournament(tournament: Partial<Tournament>): Promise
       .insert([{
         name: tournament.name,
         location: tournament.location || null,
+        description: tournament.description || null,
         start_date: tournament.start_date,
         end_date: tournament.end_date || null,
         format: tournament.format || 'swiss',
         total_rounds: tournament.total_rounds || 9,
         current_round: 0,
-        time_control: tournament.time_control || null,
+        time_control: tournament.time_control || '30+0',
         default_time_minutes: tournament.default_time_minutes || 30,
         grace_period_minutes: tournament.grace_period_minutes || 0,
         bye_points: tournament.bye_points || 1.0,
-        initial_bounty: tournament.initial_bounty || 20,
-        entry_fee: tournament.entry_fee || null,
-        prize_fund: tournament.prize_fund || null,
+        initial_bounty: tournament.initial_bounty || null, // Optional: null for standard tournaments
+        entry_fee: tournament.entry_fee || 0,
+        prize_pool: tournament.prize_pool || 0, // Fixed: was prize_fund
         status: 'draft',
         tournament_started: false,
         allow_late_entries: tournament.allow_late_entries !== undefined ? tournament.allow_late_entries : true,

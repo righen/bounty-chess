@@ -30,6 +30,7 @@ import { createTournament } from '@/lib/tournament-store';
 interface TournamentFormData {
   name: string;
   location: string;
+  description: string;
   start_date: string;
   end_date: string;
   format: 'swiss' | 'round_robin' | 'knockout';
@@ -38,9 +39,10 @@ interface TournamentFormData {
   default_time_minutes: number;
   grace_period_minutes: number;
   bye_points: number;
-  initial_bounty: number;
+  use_bounty_system: boolean; // Toggle for bounty/pesos feature
+  initial_bounty: number | null; // Optional: only for bounty tournaments
   entry_fee: number;
-  prize_fund: number;
+  prize_pool: number; // Fixed: was prize_fund
   allow_late_entries: boolean;
   late_entry_deadline_round: number | null;
 }
@@ -60,6 +62,7 @@ function CreateTournamentPage() {
   const [formData, setFormData] = useState<TournamentFormData>({
     name: '',
     location: '',
+    description: '',
     start_date: new Date().toISOString().split('T')[0],
     end_date: '',
     format: 'swiss',
@@ -68,9 +71,10 @@ function CreateTournamentPage() {
     default_time_minutes: 30,
     grace_period_minutes: 0,
     bye_points: 1.0,
-    initial_bounty: 20,
+    use_bounty_system: false, // Default: standard tournament (no bounty)
+    initial_bounty: null, // Optional: only for bounty tournaments
     entry_fee: 0,
-    prize_fund: 0,
+    prize_pool: 0, // Fixed: was prize_fund
     allow_late_entries: true,
     late_entry_deadline_round: null,
   });
@@ -106,7 +110,7 @@ function CreateTournamentPage() {
     }
 
     if (step === 2) {
-      if (formData.initial_bounty < 0) {
+      if (formData.use_bounty_system && formData.initial_bounty !== null && formData.initial_bounty < 0) {
         newErrors.initial_bounty = 'Initial bounty must be positive';
       }
       if (formData.bye_points < 0 || formData.bye_points > 1) {
@@ -135,7 +139,17 @@ function CreateTournamentPage() {
 
     try {
       setLoading(true);
-      await createTournament(formData);
+      
+      // Prepare data for submission (remove UI-only fields)
+      const { use_bounty_system, ...tournamentData } = formData;
+      
+      // If not using bounty system, set initial_bounty to null
+      const finalData = {
+        ...tournamentData,
+        initial_bounty: use_bounty_system ? formData.initial_bounty : null,
+      };
+      
+      await createTournament(finalData);
       showSnackbar('Tournament created successfully!', 'success');
       setTimeout(() => {
         router.push('/dashboard');
@@ -160,6 +174,16 @@ function CreateTournamentPage() {
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               error={!!errors.name}
               helperText={errors.name}
+              sx={{ gridColumn: { xs: '1', sm: '1 / -1' } }}
+            />
+            <TextField
+              fullWidth
+              label="Description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Optional tournament description"
+              multiline
+              rows={2}
               sx={{ gridColumn: { xs: '1', sm: '1 / -1' } }}
             />
             <TextField
@@ -272,45 +296,72 @@ function CreateTournamentPage() {
 
       case 2:
         return (
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 3 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <Alert severity="info">
+              <strong>Bounty/Pesos System:</strong> This is an optional feature for special tournaments. 
+              For standard Swiss tournaments, leave this disabled.
+            </Alert>
+
             <TextField
               fullWidth
-              label="Initial Bounty (Pesos) *"
-              type="number"
-              value={formData.initial_bounty}
-              onChange={(e) => setFormData({ ...formData, initial_bounty: parseInt(e.target.value) || 0 })}
-              error={!!errors.initial_bounty}
-              helperText="Starting bounty for each player"
-              inputProps={{ min: 0 }}
-            />
-            <TextField
-              fullWidth
-              label="BYE Points *"
-              type="number"
-              value={formData.bye_points}
-              onChange={(e) => setFormData({ ...formData, bye_points: parseFloat(e.target.value) || 0 })}
-              error={!!errors.bye_points}
-              helperText="Points awarded for BYE (usually 1.0)"
-              inputProps={{ min: 0, max: 1, step: 0.5 }}
-            />
-            <TextField
-              fullWidth
-              label="Entry Fee"
-              type="number"
-              value={formData.entry_fee}
-              onChange={(e) => setFormData({ ...formData, entry_fee: parseFloat(e.target.value) || 0 })}
-              helperText="Optional entry fee per player"
-              inputProps={{ min: 0, step: 0.01 }}
-            />
-            <TextField
-              fullWidth
-              label="Prize Fund"
-              type="number"
-              value={formData.prize_fund}
-              onChange={(e) => setFormData({ ...formData, prize_fund: parseFloat(e.target.value) || 0 })}
-              helperText="Total prize pool (optional)"
-              inputProps={{ min: 0, step: 0.01 }}
-            />
+              select
+              label="Use Bounty/Pesos System"
+              value={formData.use_bounty_system ? 'yes' : 'no'}
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                use_bounty_system: e.target.value === 'yes',
+                initial_bounty: e.target.value === 'yes' ? 20 : null 
+              })}
+              helperText="Enable for bounty-based tournaments (optional feature)"
+            >
+              <MenuItem value="no">No - Standard Tournament</MenuItem>
+              <MenuItem value="yes">Yes - Use Bounty System</MenuItem>
+            </TextField>
+
+            {formData.use_bounty_system && (
+              <TextField
+                fullWidth
+                label="Initial Bounty (Pesos) *"
+                type="number"
+                value={formData.initial_bounty || 20}
+                onChange={(e) => setFormData({ ...formData, initial_bounty: parseInt(e.target.value) || 20 })}
+                error={!!errors.initial_bounty}
+                helperText="Starting bounty for each player"
+                inputProps={{ min: 0 }}
+              />
+            )}
+
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 3 }}>
+              <TextField
+                fullWidth
+                label="BYE Points *"
+                type="number"
+                value={formData.bye_points}
+                onChange={(e) => setFormData({ ...formData, bye_points: parseFloat(e.target.value) || 0 })}
+                error={!!errors.bye_points}
+                helperText="Points awarded for BYE (usually 1.0)"
+                inputProps={{ min: 0, max: 1, step: 0.5 }}
+              />
+              <TextField
+                fullWidth
+                label="Entry Fee"
+                type="number"
+                value={formData.entry_fee}
+                onChange={(e) => setFormData({ ...formData, entry_fee: parseFloat(e.target.value) || 0 })}
+                helperText="Optional entry fee per player"
+                inputProps={{ min: 0, step: 0.01 }}
+              />
+              <TextField
+                fullWidth
+                label="Prize Pool"
+                type="number"
+                value={formData.prize_pool}
+                onChange={(e) => setFormData({ ...formData, prize_pool: parseFloat(e.target.value) || 0 })}
+                helperText="Total prize pool (optional)"
+                inputProps={{ min: 0, step: 0.01 }}
+                sx={{ gridColumn: { xs: '1', sm: '1 / -1' } }}
+              />
+            </Box>
           </Box>
         );
 
@@ -417,16 +468,28 @@ function CreateTournamentPage() {
               <Typography variant="caption" color="text.secondary">Time Control</Typography>
               <Typography variant="body2" sx={{ fontWeight: 600 }}>{formData.time_control || '-'}</Typography>
             </Box>
-            <Box>
-              <Typography variant="caption" color="text.secondary">Initial Bounty</Typography>
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>{formData.initial_bounty} Pesos</Typography>
-            </Box>
+            {formData.use_bounty_system && (
+              <Box>
+                <Typography variant="caption" color="text.secondary">Bounty System</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  Enabled - {formData.initial_bounty} Pesos
+                </Typography>
+              </Box>
+            )}
             <Box>
               <Typography variant="caption" color="text.secondary">Entry Fee</Typography>
               <Typography variant="body2" sx={{ fontWeight: 600 }}>
                 {formData.entry_fee > 0 ? `$${formData.entry_fee}` : 'Free'}
               </Typography>
             </Box>
+            {formData.prize_pool > 0 && (
+              <Box>
+                <Typography variant="caption" color="text.secondary">Prize Pool</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  ${formData.prize_pool}
+                </Typography>
+              </Box>
+            )}
             <Box>
               <Typography variant="caption" color="text.secondary">Late Entries</Typography>
               <Typography variant="body2" sx={{ fontWeight: 600 }}>
