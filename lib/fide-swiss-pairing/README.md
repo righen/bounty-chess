@@ -35,8 +35,9 @@ fide-swiss-pairing/
 | **Transpositions** | ✅ Complete | D.1 |
 | **Exchanges** | ✅ Complete | D.2, D.3 |
 | **Bracket Pairing** | ✅ Complete | B.1-B.8 |
-| **Candidate Evaluation** | ⏳ Partial | C.1-C.19 |
-| **Main Engine** | 🚧 Next Phase | A.9, Full algorithm |
+| **Candidate Evaluation** | ✅ Complete | C.1-C.4 (absolute) |
+| **Main Engine** | ✅ Complete | A.9, Full algorithm |
+| **Index/Exports** | ✅ Complete | Clean API |
 
 ## Features
 
