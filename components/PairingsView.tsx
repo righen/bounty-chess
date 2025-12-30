@@ -23,6 +23,7 @@ import {
 } from '@mui/icons-material';
 import { getRoundGames, Game } from '@/lib/tournament-rounds';
 import { getTournamentRegistrations, RegistrationWithPlayer } from '@/lib/registration-store';
+import { supabase } from '@/lib/supabase';
 import ResultEntryDialog from './ResultEntryDialog';
 
 interface PairingsViewProps {
@@ -33,6 +34,7 @@ interface PairingsViewProps {
 export default function PairingsView({ tournamentId, roundNumber }: PairingsViewProps) {
   const [games, setGames] = useState<Game[]>([]);
   const [registrations, setRegistrations] = useState<RegistrationWithPlayer[]>([]);
+  const [playerNameCache, setPlayerNameCache] = useState<Map<number, string>>(new Map());
   const [loading, setLoading] = useState(true);
   const [resultDialogOpen, setResultDialogOpen] = useState(false);
   const [selectedGameId, setSelectedGameId] = useState<string | null>(null);
@@ -50,6 +52,47 @@ export default function PairingsView({ tournamentId, roundNumber }: PairingsView
       ]);
       setGames(gamesData);
       setRegistrations(registrationsData);
+      
+      // Build player name cache from registrations
+      const cache = new Map<number, string>();
+      registrationsData.forEach(reg => {
+        const regAny = reg as any;
+        const playerId = regAny.player_pool_id || regAny.player_id;
+        if (playerId) {
+          if (reg.player && reg.player.name && reg.player.surname) {
+            cache.set(playerId, `${reg.player.name} ${reg.player.surname}`);
+          } else if (regAny.player_name && regAny.player_surname) {
+            cache.set(playerId, `${regAny.player_name} ${regAny.player_surname}`);
+          }
+        }
+      });
+      
+      // For any player IDs in games that aren't in cache, try to query old players table
+      const missingPlayerIds = new Set<number>();
+      gamesData.forEach(game => {
+        if (game.white_player_id && !cache.has(game.white_player_id)) {
+          missingPlayerIds.add(game.white_player_id);
+        }
+        if (game.black_player_id && !cache.has(game.black_player_id)) {
+          missingPlayerIds.add(game.black_player_id);
+        }
+      });
+      
+      if (missingPlayerIds.size > 0) {
+        // Query old players table as fallback
+        const { data: oldPlayers } = await supabase
+          .from('players')
+          .select('id, name, surname')
+          .in('id', Array.from(missingPlayerIds));
+        
+        if (oldPlayers) {
+          oldPlayers.forEach(p => {
+            cache.set(p.id, `${p.name} ${p.surname}`);
+          });
+        }
+      }
+      
+      setPlayerNameCache(cache);
     } catch (error) {
       console.error('Error loading pairings:', error);
     } finally {
@@ -72,26 +115,36 @@ export default function PairingsView({ tournamentId, roundNumber }: PairingsView
   };
 
   const getPlayerName = (playerId: number): string => {
-    // Try to find by player_pool_id first (new schema), then player_id (old schema)
+    if (!playerId || playerId === 0) return 'BYE';
+    
+    // Check cache first
+    if (playerNameCache.has(playerId)) {
+      return playerNameCache.get(playerId)!;
+    }
+    
+    // Try to find in registrations
     const reg = registrations.find(r => {
       const regAny = r as any;
       return (regAny.player_pool_id === playerId) || (regAny.player_id === playerId);
     });
-    if (!reg || !reg.player) {
-      // Fallback: try to get from player_name and player_surname if available
-      const regFallback = registrations.find(r => {
-        const regAny = r as any;
-        return (regAny.player_pool_id === playerId) || (regAny.player_id === playerId);
-      });
-      if (regFallback) {
-        const regAny = regFallback as any;
-        if (regAny.player_name && regAny.player_surname) {
-          return `${regAny.player_name} ${regAny.player_surname}`;
-        }
+    
+    if (reg) {
+      // Found registration - use player data or fallback to name/surname fields
+      if (reg.player && reg.player.name && reg.player.surname) {
+        const name = `${reg.player.name} ${reg.player.surname}`;
+        playerNameCache.set(playerId, name);
+        return name;
       }
-      return `Player ${playerId}`;
+      const regAny = reg as any;
+      if (regAny.player_name && regAny.player_surname) {
+        const name = `${regAny.player_name} ${regAny.player_surname}`;
+        playerNameCache.set(playerId, name);
+        return name;
+      }
     }
-    return `${reg.player.name} ${reg.player.surname}`;
+    
+    // Not found - return placeholder
+    return `Player ${playerId}`;
   };
 
   const getPlayerBounty = (playerId: number): number => {
