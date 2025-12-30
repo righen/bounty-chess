@@ -78,7 +78,7 @@ export default function ResultEntryDialog({
     
     setLoading(true);
     try {
-      const data = await getGameForResultEntry(gameId);
+      const data = await getGameForResultEntry(gameId, tournamentId);
       if (data) {
         setGame(data.game);
         setWhitePlayer(data.whitePlayer);

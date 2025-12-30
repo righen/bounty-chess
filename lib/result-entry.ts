@@ -223,11 +223,15 @@ function registrationToPlayer(reg: RegistrationWithPlayer): Player {
  * Check if round is complete and mark it if so
  */
 async function checkAndCompleteRound(tournamentId: string, roundNumber: number): Promise<void> {
-  const { data: games, error } = await supabase
+  // Filter games by tournament using game ID pattern (old schema doesn't have tournament_id)
+  const { data: allGames, error } = await supabase
     .from('games')
-    .select('completed')
-    .eq('tournament_id', tournamentId)
-    .eq('round_number', roundNumber);
+    .select('completed, id')
+    .eq('round_number', roundNumber)
+    .like('id', `game-${tournamentId}-%`);
+  
+  // Filter to only games that match tournament pattern
+  const games = (allGames || []).filter(g => g.id && g.id.startsWith(`game-${tournamentId}-`));
 
   if (error) {
     console.error('Error checking round completion:', error);
@@ -237,21 +241,29 @@ async function checkAndCompleteRound(tournamentId: string, roundNumber: number):
   const allCompleted = games?.every(g => g.completed) || false;
 
   if (allCompleted) {
-    await supabase
+    // Update round - try to filter by tournament_id if column exists, otherwise by round_number only
+    let roundQuery = supabase
       .from('rounds')
       .update({
         completed: true,
-        completed_at: new Date().toISOString(),
       })
-      .eq('tournament_id', tournamentId)
       .eq('round_number', roundNumber);
+    
+    // Try to filter by tournament_id if column exists
+    try {
+      roundQuery = roundQuery.eq('tournament_id', tournamentId);
+    } catch (err) {
+      // tournament_id column doesn't exist, continue without it
+    }
+    
+    await roundQuery;
   }
 }
 
 /**
  * Get game with player details for result entry
  */
-export async function getGameForResultEntry(gameId: string): Promise<{
+export async function getGameForResultEntry(gameId: string, tournamentId: string): Promise<{
   game: Game;
   whitePlayer: RegistrationWithPlayer;
   blackPlayer: RegistrationWithPlayer | null;
@@ -263,9 +275,27 @@ export async function getGameForResultEntry(gameId: string): Promise<{
       .eq('id', gameId)
       .single();
 
-    if (gameError || !game) return null;
+    if (gameError || !game) {
+      console.error('Error loading game:', gameError);
+      return null;
+    }
 
-    const registrations = await getTournamentRegistrations(game.tournament_id);
+    // Extract tournament ID from game ID if not provided
+    // Game ID format: game-{tournamentId}-r{roundNumber}-b{boardNumber}
+    let actualTournamentId = tournamentId;
+    if (!actualTournamentId && game.id && game.id.startsWith('game-')) {
+      const parts = game.id.split('-');
+      if (parts.length >= 2) {
+        actualTournamentId = parts[1];
+      }
+    }
+
+    if (!actualTournamentId) {
+      console.error('Tournament ID not found for game:', gameId);
+      return null;
+    }
+
+    const registrations = await getTournamentRegistrations(actualTournamentId);
     const whitePlayer = registrations.find(r => (r.player_id || r.player_pool_id) === game.white_player_id);
     const blackPlayer = game.black_player_id
       ? registrations.find(r => (r.player_id || r.player_pool_id) === game.black_player_id)
