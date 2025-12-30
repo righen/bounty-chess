@@ -249,7 +249,7 @@ export default function ResultEntryDialog({
               {whitePlayerData.name} {whitePlayerData.surname}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Current Pesos: {whitePlayerData.bounty}₱
+              Wins: {whitePlayerData.wins}
             </Typography>
           </Box>
         </DialogContent>
