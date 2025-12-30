@@ -98,6 +98,13 @@ function CheckInPage() {
   });
   const [checkInLog, setCheckInLog] = useState<CheckInLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [bulkCheckingIn, setBulkCheckingIn] = useState(false);
+  const [checkInProgress, setCheckInProgress] = useState<{
+    current: number;
+    total: number;
+    success: number;
+    failed: number;
+  } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTab, setSelectedTab] = useState(0);
 
@@ -302,17 +309,35 @@ function CheckInPage() {
 
     if (!confirm(`Check in ${selectedRegistrations.length} player(s)?`)) return;
 
+    setBulkCheckingIn(true);
+    setCheckInProgress({
+      current: 0,
+      total: selectedRegistrations.length,
+      success: 0,
+      failed: 0,
+    });
+
     try {
-      const result = await bulkCheckIn(selectedRegistrations);
+      const result = await bulkCheckIn(
+        selectedRegistrations,
+        undefined,
+        (current, total, success, failed) => {
+          setCheckInProgress({ current, total, success, failed });
+        }
+      );
+      
       showSnackbar(
         `Checked in ${result.success} player(s). Failed: ${result.failed}`,
         result.failed > 0 ? 'error' : 'success'
       );
       setSelectedRegistrations([]);
-      loadData();
+      await loadData();
     } catch (error) {
       console.error('Error bulk checking in:', error);
       showSnackbar('Failed to bulk check in', 'error');
+    } finally {
+      setBulkCheckingIn(false);
+      setCheckInProgress(null);
     }
   };
 
@@ -482,14 +507,46 @@ function CheckInPage() {
             {selectedRegistrations.length > 0 && (
               <Button
                 variant="contained"
-                startIcon={<CheckAllIcon />}
+                startIcon={bulkCheckingIn ? <CircularProgress size={16} color="inherit" /> : <CheckAllIcon />}
                 onClick={handleBulkCheckIn}
+                disabled={bulkCheckingIn}
               >
-                Check In ({selectedRegistrations.length})
+                {bulkCheckingIn 
+                  ? `Checking in... (${checkInProgress?.current || 0}/${checkInProgress?.total || 0})`
+                  : `Check In (${selectedRegistrations.length})`
+                }
               </Button>
             )}
           </Box>
         </Paper>
+
+        {/* Progress Indicator */}
+        {bulkCheckingIn && checkInProgress && (
+          <Alert 
+            severity="info" 
+            sx={{ mb: 2 }}
+            icon={<CircularProgress size={20} />}
+          >
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                Checking in players: {checkInProgress.current} of {checkInProgress.total}
+              </Typography>
+              <Box sx={{ width: '100%', bgcolor: 'grey.200', borderRadius: 1, overflow: 'hidden' }}>
+                <Box
+                  sx={{
+                    width: `${(checkInProgress.current / checkInProgress.total) * 100}%`,
+                    bgcolor: 'primary.main',
+                    height: 8,
+                    transition: 'width 0.3s ease',
+                  }}
+                />
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                Success: {checkInProgress.success} • Failed: {checkInProgress.failed}
+              </Typography>
+            </Box>
+          </Alert>
+        )}
 
         {/* Check-In Table */}
         <Paper>
@@ -515,6 +572,7 @@ function CheckInPage() {
                           selectedRegistrations.length < filteredRegistrations.length
                         }
                         onChange={toggleSelectAll}
+                        disabled={bulkCheckingIn}
                       />
                     </TableCell>
                     <TableCell>Pairing #</TableCell>
@@ -532,7 +590,7 @@ function CheckInPage() {
                         <Checkbox
                           checked={selectedRegistrations.includes(registration.id)}
                           onChange={() => toggleSelectRegistration(registration.id)}
-                          disabled={registration.checked_in}
+                          disabled={registration.checked_in || bulkCheckingIn}
                         />
                       </TableCell>
                       <TableCell>

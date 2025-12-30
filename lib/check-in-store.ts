@@ -315,22 +315,30 @@ export async function getCheckInLog(tournamentId: string): Promise<CheckInLogEnt
 }
 
 /**
- * Bulk check-in multiple players
+ * Bulk check-in multiple players with progress callback
  */
 export async function bulkCheckIn(
   registrationIds: string[],
-  performedBy?: string
+  performedBy?: string,
+  onProgress?: (current: number, total: number, success: number, failed: number) => void
 ): Promise<{ success: number; failed: number }> {
   let success = 0;
   let failed = 0;
+  const total = registrationIds.length;
 
-  for (const id of registrationIds) {
+  for (let i = 0; i < registrationIds.length; i++) {
+    const id = registrationIds[i];
     try {
       await checkInPlayer(id, performedBy);
       success++;
     } catch (error) {
       console.error(`Failed to check in registration ${id}:`, error);
       failed++;
+    }
+    
+    // Call progress callback if provided
+    if (onProgress) {
+      onProgress(i + 1, total, success, failed);
     }
   }
 
