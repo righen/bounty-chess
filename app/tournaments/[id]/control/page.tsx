@@ -28,6 +28,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { getTournament, Tournament } from '@/lib/tournament-store';
 import { getTournamentRegistrations, RegistrationWithPlayer } from '@/lib/registration-store';
 import { startTournament, generateNextRound } from '@/lib/tournament-rounds';
+import PairingsView from '@/components/PairingsView';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -270,20 +271,17 @@ function TournamentControlPage() {
 
       {/* Tab Content */}
       <TabPanel value={selectedTab} index={0}>
-        <Paper sx={{ p: 3, mt: 2 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Round {tournament.current_round} Pairings
-          </Typography>
-          {tournament.current_round === 0 ? (
+        {tournament.current_round === 0 ? (
+          <Paper sx={{ p: 3, mt: 2 }}>
             <Alert severity="info">
               Tournament not started yet. Click "Start Tournament" to generate Round 1 pairings.
             </Alert>
-          ) : (
-            <Alert severity="info">
-              Pairings view coming next! This will show all games for the current round.
-            </Alert>
-          )}
-        </Paper>
+          </Paper>
+        ) : (
+          <Box sx={{ mt: 2 }}>
+            <PairingsView tournamentId={tournamentId} roundNumber={tournament.current_round} />
+          </Box>
+        )}
       </TabPanel>
 
       <TabPanel value={selectedTab} index={1}>
