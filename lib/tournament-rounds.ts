@@ -648,22 +648,37 @@ export async function getRoundGames(tournamentId: string, roundNumber: number): 
     console.log(`🔍 Filtering games for tournament ${tournamentId}, Round ${roundNumber}`);
     console.log(`👥 Registered players in tournament: ${registeredPlayerIds.size}`);
     
-    // Get the round_id for this tournament's round (if rounds table has tournament_id)
+    // Get the round_id for this tournament's round
+    // Try to filter by tournament_id if the column exists, otherwise get most recent
     let tournamentRoundId: string | number | null = null;
     try {
-      const { data: round } = await supabase
+      // First try to get round with tournament_id filter (new schema)
+      let roundQuery = supabase
         .from('rounds')
         .select('id')
-        .eq('round_number', roundNumber)
+        .eq('round_number', roundNumber);
+      
+      // Try to filter by tournament_id if column exists
+      try {
+        roundQuery = roundQuery.eq('tournament_id', tournamentId);
+      } catch (err) {
+        // tournament_id column doesn't exist, continue without it
+      }
+      
+      const { data: round } = await roundQuery
         .order('id', { ascending: false })
         .limit(1)
         .maybeSingle();
       
       if (round) {
         tournamentRoundId = round.id;
+        console.log(`✅ Found round_id ${tournamentRoundId} for tournament ${tournamentId}, Round ${roundNumber}`);
+      } else {
+        console.warn(`⚠️ No round found for tournament ${tournamentId}, Round ${roundNumber}`);
       }
     } catch (err) {
-      // Rounds table might not have tournament_id, continue
+      console.warn('Error getting round_id:', err);
+      // Continue without round_id filter
     }
     
     // Get all games for this round number
@@ -675,6 +690,9 @@ export async function getRoundGames(tournamentId: string, roundNumber: number): 
     // If we have a round_id, filter by it (more precise)
     if (tournamentRoundId) {
       query = query.eq('round_id', tournamentRoundId);
+      console.log(`🔍 Filtering games by round_id: ${tournamentRoundId}`);
+    } else {
+      console.log(`⚠️ No round_id filter - will rely on game ID pattern and player registrations`);
     }
     
     const { data: allGames, error } = await query.order('id');
@@ -683,11 +701,12 @@ export async function getRoundGames(tournamentId: string, roundNumber: number): 
     
     console.log(`📊 Total games found for Round ${roundNumber}: ${allGames?.length || 0}`);
     
-    // STRICT FILTERING: Game must match BOTH criteria:
-    // 1. Game ID matches tournament pattern (game-{tournamentId}-r{roundNumber}-...)
+    // FILTERING: Game belongs to tournament if EITHER:
+    // 1. Game ID matches tournament pattern (game-{tournamentId}-r{roundNumber}-...), OR
     // 2. BOTH players are registered in this tournament
+    // Using OR logic ensures we don't miss games even if ID format is inconsistent
     const filteredGames = (allGames || []).filter(game => {
-      // Primary filter: Game ID must match tournament pattern
+      // Primary filter: Game ID matches tournament pattern
       const gameIdMatches = game.id && game.id.startsWith(`game-${tournamentId}-`);
       
       // Secondary filter: Both players must be registered
@@ -697,13 +716,16 @@ export async function getRoundGames(tournamentId: string, roundNumber: number): 
                              registeredPlayerIds.has(game.black_player_id);
       const bothPlayersRegistered = whiteRegistered && blackRegistered;
       
-      // Game belongs to this tournament ONLY if:
-      // - Game ID matches tournament pattern AND both players are registered
-      // This ensures we don't mix tournaments even if player IDs overlap
-      const belongsToTournament = gameIdMatches && bothPlayersRegistered;
+      // Game belongs to this tournament if:
+      // - Game ID matches tournament pattern, OR
+      // - Both players are registered in this tournament
+      // This ensures we catch games even if ID format is wrong, but still filter correctly
+      const belongsToTournament = gameIdMatches || bothPlayersRegistered;
       
       if (!belongsToTournament) {
         console.log(`❌ Filtered out game ${game.id}: idMatch=${gameIdMatches}, playersRegistered=${bothPlayersRegistered}`);
+      } else {
+        console.log(`✅ Included game ${game.id}: idMatch=${gameIdMatches}, playersRegistered=${bothPlayersRegistered}`);
       }
       
       return belongsToTournament;
