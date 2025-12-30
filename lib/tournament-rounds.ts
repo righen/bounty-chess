@@ -588,20 +588,62 @@ export async function generateNextRound(tournamentId: string): Promise<{ round: 
 }
 
 /**
- * Get current round games
+ * Get current round games - FILTERED BY TOURNAMENT
  */
 export async function getRoundGames(tournamentId: string, roundNumber: number): Promise<Game[]> {
   try {
-    // Query games - old schema doesn't have tournament_id or board_number
-    // Filter by round_number and order by id (creation order)
-    const { data, error } = await supabase
+    // Get tournament registrations to know which players belong to this tournament
+    const registrations = await getTournamentRegistrations(tournamentId);
+    const registeredPlayerIds = new Set<number>();
+    registrations.forEach(reg => {
+      const regAny = reg as any;
+      const playerId = regAny.player_pool_id || regAny.player_id;
+      if (playerId) registeredPlayerIds.add(playerId);
+    });
+    
+    console.log(`Filtering games for tournament ${tournamentId}, Round ${roundNumber}`);
+    console.log(`Registered players in tournament: ${registeredPlayerIds.size}`);
+    
+    // Get all games for this round number
+    const { data: allGames, error } = await supabase
       .from('games')
       .select('*')
       .eq('round_number', roundNumber)
-      .order('id'); // Order by id as fallback for board_number
-
+      .order('id');
+    
     if (error) throw error;
-    return (data || []) as Game[];
+    
+    console.log(`Total games found for Round ${roundNumber}: ${allGames?.length || 0}`);
+    
+    // Filter games to only include those where BOTH players are registered in this tournament
+    // AND game ID matches tournament pattern (game-{tournamentId}-r{roundNumber}-...)
+    const filteredGames = (allGames || []).filter(game => {
+      // Check if game ID matches tournament pattern
+      const gameIdMatches = game.id.startsWith(`game-${tournamentId}-`);
+      
+      // Check if white player is registered
+      const whiteRegistered = registeredPlayerIds.has(game.white_player_id);
+      
+      // Check if black player is registered (or is BYE)
+      const blackRegistered = game.black_player_id === 0 || 
+                             game.black_player_id === null || 
+                             registeredPlayerIds.has(game.black_player_id);
+      
+      // Game belongs to this tournament if:
+      // 1. Game ID matches tournament pattern, OR
+      // 2. Both players are registered in this tournament
+      const belongsToTournament = gameIdMatches || (whiteRegistered && blackRegistered);
+      
+      if (!belongsToTournament) {
+        console.log(`Filtered out game ${game.id}: white=${whiteRegistered}, black=${blackRegistered}, idMatch=${gameIdMatches}`);
+      }
+      
+      return belongsToTournament;
+    });
+    
+    console.log(`Filtered games for tournament: ${filteredGames.length}`);
+    
+    return filteredGames as Game[];
   } catch (error) {
     console.error('Error getting round games:', error);
     throw error;
