@@ -93,14 +93,28 @@ function TournamentControlPage() {
   const handleStartTournament = async () => {
     if (!confirm('Start the tournament? This will generate Round 1 pairings.')) return;
     
+    setActionLoading(true);
     try {
-      setActionLoading(true);
-      await startTournament(tournamentId);
-      setSnackbar({ open: true, message: 'Tournament started! Round 1 pairings generated.', severity: 'success' });
-      loadData();
+      console.log('Starting tournament...');
+      const result = await startTournament(tournamentId);
+      console.log('Tournament started successfully:', result);
+      setSnackbar({ 
+        open: true, 
+        message: `Tournament started! Round 1 pairings generated (${result.games.length} games).`, 
+        severity: 'success' 
+      });
+      // Reload data after a short delay to ensure database is updated
+      setTimeout(() => {
+        loadData();
+      }, 500);
     } catch (error: any) {
       console.error('Error starting tournament:', error);
-      setSnackbar({ open: true, message: error.message || 'Failed to start tournament', severity: 'error' });
+      const errorMessage = error?.message || error?.toString() || 'Failed to start tournament';
+      setSnackbar({ 
+        open: true, 
+        message: `Failed to start tournament: ${errorMessage}`, 
+        severity: 'error' 
+      });
     } finally {
       setActionLoading(false);
     }

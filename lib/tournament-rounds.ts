@@ -5,7 +5,7 @@ import { Tournament } from './tournament-store';
 import { Player } from '@/types';
 
 export interface Round {
-  id: number;
+  id: number | string; // Can be SERIAL (number) or UUID (string) depending on schema
   tournament_id: string;
   round_number: number;
   completed: boolean;
@@ -17,7 +17,7 @@ export interface Round {
 export interface Game {
   id: string;
   tournament_id: string;
-  round_id: number;
+  round_id: number | string; // Can be SERIAL (number) or UUID (string) depending on schema
   round_number: number;
   board_number: number;
   white_player_id: number;
@@ -35,6 +35,8 @@ export interface Game {
  */
 export async function startTournament(tournamentId: string): Promise<{ round: Round; games: Game[] }> {
   try {
+    console.log('Starting tournament:', tournamentId);
+    
     // 1. Get tournament
     const { data: tournament, error: tournamentError } = await supabase
       .from('tournaments')
@@ -42,17 +44,26 @@ export async function startTournament(tournamentId: string): Promise<{ round: Ro
       .eq('id', tournamentId)
       .single();
 
-    if (tournamentError) throw tournamentError;
+    if (tournamentError) {
+      console.error('Error fetching tournament:', tournamentError);
+      throw tournamentError;
+    }
+
+    console.log('Tournament found:', tournament?.name);
 
     // 2. Get all checked-in players
+    console.log('Fetching registrations...');
     const registrations = await getTournamentRegistrations(tournamentId);
     const checkedInPlayers = registrations.filter(r => r.checked_in);
+
+    console.log(`Found ${checkedInPlayers.length} checked-in players`);
 
     if (checkedInPlayers.length < 2) {
       throw new Error('Need at least 2 checked-in players to start tournament');
     }
 
     // 3. Create Round 1
+    console.log('Creating Round 1...');
     const { data: round, error: roundError } = await supabase
       .from('rounds')
       .insert([{
@@ -64,9 +75,15 @@ export async function startTournament(tournamentId: string): Promise<{ round: Ro
       .select()
       .single();
 
-    if (roundError) throw roundError;
+    if (roundError) {
+      console.error('Error creating round:', roundError);
+      throw roundError;
+    }
+
+    console.log('Round 1 created:', round.id);
 
     // 4. Generate pairings using FIDE Swiss system
+    console.log('Generating pairings...');
     const pairingResult = await generateRoundPairings(
       tournamentId,
       round.id,
@@ -75,8 +92,11 @@ export async function startTournament(tournamentId: string): Promise<{ round: Ro
       tournament as Tournament
     );
 
+    console.log(`Generated ${pairingResult.games.length} games`);
+
     // 5. Update tournament status
-    await supabase
+    console.log('Updating tournament status...');
+    const { error: updateError } = await supabase
       .from('tournaments')
       .update({
         status: 'in_progress',
@@ -86,6 +106,12 @@ export async function startTournament(tournamentId: string): Promise<{ round: Ro
       })
       .eq('id', tournamentId);
 
+    if (updateError) {
+      console.error('Error updating tournament:', updateError);
+      throw updateError;
+    }
+
+    console.log('Tournament started successfully!');
     return {
       round,
       games: pairingResult.games,
@@ -130,30 +156,42 @@ function registrationToPlayer(reg: RegistrationWithPlayer, tournament: Tournamen
  */
 export async function generateRoundPairings(
   tournamentId: string,
-  roundId: number,
+  roundId: number | string, // Can be SERIAL or UUID
   roundNumber: number,
   players: RegistrationWithPlayer[],
   tournament: Tournament
 ): Promise<{ games: Game[] }> {
   try {
+    console.log(`Generating pairings for Round ${roundNumber}, ${players.length} players`);
+    
     // Convert registrations to Player format
     const fidePlayers: Player[] = players.map(reg => registrationToPlayer(reg, tournament));
+    console.log(`Converted ${fidePlayers.length} players to FIDE format`);
 
     // Generate pairings using FIDE Swiss system
     let pairingResult;
     if (roundNumber === 1) {
       // Round 1: Alphabetical pairing
+      console.log('Using Round 1 alphabetical pairing');
       pairingResult = pairRound1Alphabetical(fidePlayers);
     } else {
       // Subsequent rounds: FIDE Swiss pairing
+      console.log('Using FIDE Swiss pairing');
       pairingResult = pairRound(fidePlayers, roundNumber, tournament.total_rounds);
     }
+
+    console.log('Pairing result:', { success: pairingResult.success, games: pairingResult.games.length, method: pairingResult.method });
 
     if (!pairingResult.success) {
       throw new Error(`Pairing failed: ${pairingResult.method}`);
     }
 
+    if (!pairingResult.games || pairingResult.games.length === 0) {
+      throw new Error('Pairing succeeded but no games were generated');
+    }
+
     // Create games in database
+    console.log(`Creating ${pairingResult.games.length} games in database...`);
     const games: Game[] = [];
     for (let i = 0; i < pairingResult.games.length; i++) {
       const fideGame = pairingResult.games[i];
@@ -170,32 +208,38 @@ export async function generateRoundPairings(
         result = 'draw';
       }
 
-      const { data: game, error: gameError } = await supabase
-        .from('games')
-        .insert([{
-          tournament_id: tournamentId,
-          round_id: roundId,
-          round_number: roundNumber,
-          board_number: i + 1,
-          white_player_id: fideGame.whitePlayerId,
-          black_player_id: fideGame.blackPlayerId === 0 ? null : fideGame.blackPlayerId,
-          result: result,
-          white_sheriff_used: fideGame.sheriffUsage?.white || false,
-          black_sheriff_used: fideGame.sheriffUsage?.black || false,
-          bounty_transferred: fideGame.bountyTransfer || 0,
-          completed: fideGame.completed || false,
-        }])
-        .select()
-        .single();
+      try {
+        const { data: game, error: gameError } = await supabase
+          .from('games')
+          .insert([{
+            tournament_id: tournamentId,
+            round_id: roundId,
+            round_number: roundNumber,
+            board_number: i + 1,
+            white_player_id: fideGame.whitePlayerId,
+            black_player_id: fideGame.blackPlayerId === 0 ? null : fideGame.blackPlayerId,
+            result: result,
+            white_sheriff_used: fideGame.sheriffUsage?.white || false,
+            black_sheriff_used: fideGame.sheriffUsage?.black || false,
+            bounty_transferred: fideGame.bountyTransfer || 0,
+            completed: fideGame.completed || false,
+          }])
+          .select()
+          .single();
 
-      if (gameError) {
-        console.error('Error creating game:', gameError);
-        continue;
+        if (gameError) {
+          console.error(`Error creating game ${i + 1}:`, gameError);
+          throw gameError; // Don't continue, throw to see the error
+        }
+
+        games.push(game as Game);
+      } catch (gameErr) {
+        console.error(`Failed to create game ${i + 1} (Board ${i + 1}):`, gameErr);
+        throw gameErr; // Re-throw to stop the process
       }
-
-      games.push(game as Game);
     }
 
+    console.log(`Successfully created ${games.length} games`);
     return { games };
   } catch (error) {
     console.error('Error generating pairings:', error);
@@ -443,9 +487,9 @@ export async function getCurrentRound(tournamentId: string): Promise<Round | nul
       .eq('completed', false)
       .order('round_number', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle(); // Use maybeSingle instead of single to handle no rows
 
-    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
+    if (error) throw error;
     return data as Round | null;
   } catch (error) {
     console.error('Error getting current round:', error);
