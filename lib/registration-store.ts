@@ -26,24 +26,77 @@ export interface RegistrationWithPlayer extends TournamentRegistration {
  */
 export async function getTournamentRegistrations(tournamentId: string): Promise<RegistrationWithPlayer[]> {
   try {
-    // Use explicit foreign key to avoid ambiguity
-    const { data, error } = await supabase
+    // First, get all registrations
+    const { data: registrations, error: regError } = await supabase
       .from('tournament_registrations')
-      .select(`
-        *,
-        player:player_pool!tournament_registrations_player_pool_id_fkey(*)
-      `)
+      .select('*')
       .eq('tournament_id', tournamentId)
       .order('pairing_number');
 
-    if (error) throw error;
+    if (regError) throw regError;
+    if (!registrations || registrations.length === 0) return [];
 
-    // Transform the data to match our interface
-    return (data || []).map((reg: any) => ({
-      ...reg,
-      player_id: reg.player_pool_id, // Map for compatibility
-      player: reg.player,
-    }));
+    // Get all unique player_pool_ids
+    const playerIds = registrations
+      .map(r => r.player_pool_id)
+      .filter((id): id is number => id !== null && id !== undefined);
+
+    if (playerIds.length === 0) {
+      // No player_pool_ids, return registrations without player data
+      return registrations.map((reg: any) => ({
+        ...reg,
+        player_id: reg.player_pool_id,
+        player: null as any, // Will need to handle this case
+      }));
+    }
+
+    // Fetch all players in one query
+    const { data: players, error: playersError } = await supabase
+      .from('player_pool')
+      .select('*')
+      .in('id', playerIds);
+
+    if (playersError) {
+      console.warn('Error fetching players:', playersError);
+      // Continue without player data
+    }
+
+    // Create a map for quick lookup
+    const playerMap = new Map((players || []).map(p => [p.id, p]));
+
+    // Combine registrations with player data
+    return registrations.map((reg: any) => {
+      const player = reg.player_pool_id ? playerMap.get(reg.player_pool_id) : null;
+      return {
+        ...reg,
+        player_id: reg.player_pool_id, // Map for compatibility
+        player: player || {
+          id: reg.player_pool_id || 0,
+          name: reg.player_name || 'Unknown',
+          surname: reg.player_surname || 'Player',
+          email: null,
+          phone: null,
+          birthdate: null,
+          age: reg.player_age || null,
+          gender: reg.player_gender || null,
+          rating: reg.player_rating || null,
+          fide_id: null,
+          national_id: null,
+          photo_url: null,
+          notes: null,
+          tournaments_played: 0,
+          total_games: 0,
+          total_wins: 0,
+          total_draws: 0,
+          total_losses: 0,
+          active: true,
+          banned: false,
+          ban_reason: null,
+          created_at: '',
+          updated_at: '',
+        },
+      };
+    });
   } catch (error) {
     console.error('Error getting tournament registrations:', error);
     throw error;
