@@ -72,13 +72,13 @@ export default function PairingsView({ tournamentId, roundNumber }: PairingsView
   };
 
   const getPlayerName = (playerId: number): string => {
-    const reg = registrations.find(r => r.player_id === playerId);
+    const reg = registrations.find(r => (r.player_id || r.player_pool_id) === playerId);
     if (!reg) return `Player ${playerId}`;
     return `${reg.player.name} ${reg.player.surname}`;
   };
 
   const getPlayerBounty = (playerId: number): number => {
-    const reg = registrations.find(r => r.player_id === playerId);
+    const reg = registrations.find(r => (r.player_id || r.player_pool_id) === playerId);
     if (!reg) return 0;
     const regAny = reg as any;
     return regAny.current_bounty || 0;

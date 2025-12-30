@@ -1,10 +1,11 @@
 import { supabase } from './supabase';
-import { PlayerPoolRecord } from './player-pool-store';
+import { PlayerPoolRecord, loadPlayerPool } from './player-pool-store';
 
 export interface TournamentRegistration {
   id: string;
   tournament_id: string;
-  player_id: number;
+  player_pool_id: number;
+  player_id?: number; // Legacy field for compatibility
   pairing_number: number | null;
   entry_fee_paid: boolean;
   payment_method: string | null;
@@ -30,7 +31,7 @@ export async function getTournamentRegistrations(tournamentId: string): Promise<
       .from('tournament_registrations')
       .select(`
         *,
-        player:player_pool!tournament_registrations_player_id_fkey(*)
+        player:player_pool!tournament_registrations_player_pool_id_fkey(*)
       `)
       .eq('tournament_id', tournamentId)
       .order('pairing_number');
@@ -40,6 +41,7 @@ export async function getTournamentRegistrations(tournamentId: string): Promise<
     // Transform the data to match our interface
     return (data || []).map((reg: any) => ({
       ...reg,
+      player_id: reg.player_pool_id, // Map for compatibility
       player: reg.player,
     }));
   } catch (error) {
@@ -59,19 +61,30 @@ export async function registerPlayer(
   paymentReference?: string
 ): Promise<TournamentRegistration> {
   try {
-    // Check if player is already registered
+    // 1. Get player data from player_pool
+    const { data: player, error: playerError } = await supabase
+      .from('player_pool')
+      .select('*')
+      .eq('id', playerId)
+      .single();
+
+    if (playerError || !player) {
+      throw new Error('Player not found in player pool');
+    }
+
+    // 2. Check if player is already registered
     const { data: existing, error: checkError } = await supabase
       .from('tournament_registrations')
       .select('id')
       .eq('tournament_id', tournamentId)
-      .eq('player_id', playerId)
+      .eq('player_pool_id', playerId)
       .single();
 
     if (existing) {
       throw new Error('Player is already registered for this tournament');
     }
 
-    // Get next pairing number
+    // 3. Get next pairing number
     const { data: registrations, error: countError } = await supabase
       .from('tournament_registrations')
       .select('pairing_number')
@@ -83,17 +96,23 @@ export async function registerPlayer(
       ? (registrations[0].pairing_number || 0) + 1 
       : 1;
 
-    // Create registration
+    // 4. Create registration with all required fields
     const { data, error } = await supabase
       .from('tournament_registrations')
       .insert([{
         tournament_id: tournamentId,
-        player_id: playerId,
+        player_pool_id: playerId,
+        player_name: player.name,
+        player_surname: player.surname,
+        player_age: player.age,
+        player_gender: player.gender,
+        player_rating: player.rating,
         pairing_number: nextPairingNumber,
         entry_fee_paid: entryFeePaid,
         payment_method: paymentMethod || null,
         payment_reference: paymentReference || null,
         checked_in: false,
+        status: 'registered',
       }])
       .select()
       .single();
@@ -235,12 +254,12 @@ export async function getAvailablePlayers(tournamentId: string): Promise<PlayerP
     // Get all registered player IDs for this tournament
     const { data: registrations, error: regError } = await supabase
       .from('tournament_registrations')
-      .select('player_id')
+      .select('player_pool_id')
       .eq('tournament_id', tournamentId);
 
     if (regError) throw regError;
 
-    const registeredIds = registrations?.map(r => r.player_id) || [];
+    const registeredIds = registrations?.map(r => r.player_pool_id).filter(id => id !== null) || [];
 
     // Get all active players not in the registered list
     let query = supabase

@@ -189,7 +189,7 @@ export default function ResultEntryDialog({
   const registrationToPlayer = (reg: RegistrationWithPlayer): Player => {
     const regAny = reg as any;
     return {
-      id: reg.player_id,
+      id: reg.player_id || reg.player_pool_id,
       name: reg.player.name,
       surname: reg.player.surname,
       birthdate: reg.player.birthdate || '',

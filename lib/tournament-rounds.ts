@@ -104,7 +104,7 @@ function registrationToPlayer(reg: RegistrationWithPlayer, tournament: Tournamen
   const regAny = reg as any;
   
   return {
-    id: reg.player_id,
+    id: reg.player_id || reg.player_pool_id,
     name: reg.player.name,
     surname: reg.player.surname,
     birthdate: reg.player.birthdate || '',
@@ -308,20 +308,21 @@ export async function generateNextRound(tournamentId: string): Promise<{ round: 
     
       // Update registrations with scores and opponent history
       for (const reg of activePlayers) {
-        const playerScore = scores.get(reg.player_id) || { wins: 0, draws: 0, losses: 0, score: 0 };
+        const playerId = reg.player_id || reg.player_pool_id;
+        const playerScore = scores.get(playerId) || { wins: 0, draws: 0, losses: 0, score: 0 };
         
         // Get opponent history from games
         const { data: playerGames } = await supabase
           .from('games')
           .select('white_player_id, black_player_id')
           .eq('tournament_id', tournamentId)
-          .or(`white_player_id.eq.${reg.player_id},black_player_id.eq.${reg.player_id}`);
+          .or(`white_player_id.eq.${playerId},black_player_id.eq.${playerId}`);
 
         const opponentIds = new Set<number>();
         for (const game of playerGames || []) {
-          if (game.white_player_id === reg.player_id && game.black_player_id) {
+          if (game.white_player_id === playerId && game.black_player_id) {
             opponentIds.add(game.black_player_id);
-          } else if (game.black_player_id === reg.player_id) {
+          } else if (game.black_player_id === playerId) {
             opponentIds.add(game.white_player_id);
           }
         }
@@ -331,14 +332,14 @@ export async function generateNextRound(tournamentId: string): Promise<{ round: 
           .from('games')
           .select('white_player_id, black_player_id, round_number')
           .eq('tournament_id', tournamentId)
-          .or(`white_player_id.eq.${reg.player_id},black_player_id.eq.${reg.player_id}`)
+          .or(`white_player_id.eq.${playerId},black_player_id.eq.${playerId}`)
           .order('round_number');
 
         const colorHistory: ('W' | 'B' | 'BYE')[] = [];
         for (const game of playerGamesWithColors || []) {
           if (game.black_player_id === 0 || game.black_player_id === null) {
             colorHistory.push('BYE');
-          } else if (game.white_player_id === reg.player_id) {
+          } else if (game.white_player_id === playerId) {
             colorHistory.push('W');
           } else {
             colorHistory.push('B');

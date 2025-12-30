@@ -32,9 +32,9 @@ export async function submitGameResult(
 
     // 2. Get player registrations
     const registrations = await getTournamentRegistrations(tournamentId);
-    const whiteReg = registrations.find(r => r.player_id === game.white_player_id);
+    const whiteReg = registrations.find(r => (r.player_id || r.player_pool_id) === game.white_player_id);
     const blackReg = game.black_player_id
-      ? registrations.find(r => r.player_id === game.black_player_id)
+      ? registrations.find(r => (r.player_id || r.player_pool_id) === game.black_player_id)
       : null;
 
     if (!whiteReg) throw new Error('White player not found');
@@ -198,7 +198,7 @@ export async function submitGameResult(
 function registrationToPlayer(reg: RegistrationWithPlayer): Player {
   const regAny = reg as any;
   return {
-    id: reg.player_id,
+    id: reg.player_id || reg.player_pool_id,
     name: reg.player.name,
     surname: reg.player.surname,
     birthdate: reg.player.birthdate || '',
@@ -266,9 +266,9 @@ export async function getGameForResultEntry(gameId: string): Promise<{
     if (gameError || !game) return null;
 
     const registrations = await getTournamentRegistrations(game.tournament_id);
-    const whitePlayer = registrations.find(r => r.player_id === game.white_player_id);
+    const whitePlayer = registrations.find(r => (r.player_id || r.player_pool_id) === game.white_player_id);
     const blackPlayer = game.black_player_id
-      ? registrations.find(r => r.player_id === game.black_player_id)
+      ? registrations.find(r => (r.player_id || r.player_pool_id) === game.black_player_id)
       : null;
 
     if (!whitePlayer) return null;
