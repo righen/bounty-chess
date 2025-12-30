@@ -18,7 +18,7 @@ export interface Game {
   tournament_id: string;
   round_id: number | string; // Can be SERIAL (number) or UUID (string) depending on schema
   round_number: number;
-  board_number: number;
+  board_number?: number; // Optional - may not exist in old schema
   white_player_id: number;
   black_player_id: number | null;
   result: 'white_win' | 'black_win' | 'draw' | 'forfeit_white' | 'forfeit_black' | 'bye' | null;
@@ -215,21 +215,28 @@ export async function generateRoundPairings(
       }
 
       try {
+        // Build game data - only include columns that exist in old schema
+        // Old schema: id, round_id, round_number, white_player_id, black_player_id,
+        //             white_sheriff_used, black_sheriff_used, result, bounty_transferred, completed
+        const gameData: any = {
+          id: `game-${tournamentId}-r${roundNumber}-b${i + 1}`, // Generate ID
+          round_id: roundId,
+          round_number: roundNumber,
+          white_player_id: fideGame.whitePlayerId,
+          black_player_id: fideGame.blackPlayerId === 0 ? 0 : fideGame.blackPlayerId, // Use 0 for BYE in old schema
+          result: result === 'white_win' ? 'white' : result === 'black_win' ? 'black' : result === 'draw' ? 'draw' : null, // Map to old format
+          white_sheriff_used: fideGame.sheriffUsage?.white || false,
+          black_sheriff_used: fideGame.sheriffUsage?.black || false,
+          bounty_transferred: fideGame.bountyTransfer || 0,
+          completed: fideGame.completed || false,
+        };
+        
+        // Note: tournament_id and board_number don't exist in old schema
+        // Can be added via migrations if needed
+        
         const { data: game, error: gameError } = await supabase
           .from('games')
-          .insert([{
-            tournament_id: tournamentId,
-            round_id: roundId,
-            round_number: roundNumber,
-            board_number: i + 1,
-            white_player_id: fideGame.whitePlayerId,
-            black_player_id: fideGame.blackPlayerId === 0 ? null : fideGame.blackPlayerId,
-            result: result,
-            white_sheriff_used: fideGame.sheriffUsage?.white || false,
-            black_sheriff_used: fideGame.sheriffUsage?.black || false,
-            bounty_transferred: fideGame.bountyTransfer || 0,
-            completed: fideGame.completed || false,
-          }])
+          .insert([gameData])
           .select()
           .single();
 
@@ -464,12 +471,13 @@ export async function generateNextRound(tournamentId: string): Promise<{ round: 
  */
 export async function getRoundGames(tournamentId: string, roundNumber: number): Promise<Game[]> {
   try {
+    // Query games - old schema doesn't have tournament_id or board_number
+    // Filter by round_number and order by id (creation order)
     const { data, error } = await supabase
       .from('games')
       .select('*')
-      .eq('tournament_id', tournamentId)
       .eq('round_number', roundNumber)
-      .order('board_number');
+      .order('id'); // Order by id as fallback for board_number
 
     if (error) throw error;
     return (data || []) as Game[];
