@@ -50,7 +50,50 @@ export default function PairingsView({ tournamentId, roundNumber }: PairingsView
         getRoundGames(tournamentId, roundNumber),
         getTournamentRegistrations(tournamentId),
       ]);
-      setGames(gamesData);
+      
+      // Remove duplicate games - keep only the first occurrence of each unique pairing
+      const uniqueGames = new Map<string, Game>();
+      const seenPairings = new Set<string>();
+      
+      for (const game of gamesData) {
+        // Create a unique key for each pairing (order-independent)
+        const pairingKey = game.black_player_id === 0 || !game.black_player_id
+          ? `BYE-${game.white_player_id}`
+          : `${Math.min(game.white_player_id, game.black_player_id)}-${Math.max(game.white_player_id, game.black_player_id)}`;
+        
+        // Keep the first game we see for each pairing (prefer completed games if multiple exist)
+        if (!seenPairings.has(pairingKey)) {
+          seenPairings.add(pairingKey);
+          uniqueGames.set(game.id, game);
+        } else {
+          // If we already have this pairing, check if the existing one is incomplete and this one is complete
+          const existingGame = Array.from(uniqueGames.values()).find(g => {
+            const existingKey = g.black_player_id === 0 || !g.black_player_id
+              ? `BYE-${g.white_player_id}`
+              : `${Math.min(g.white_player_id, g.black_player_id)}-${Math.max(g.white_player_id, g.black_player_id)}`;
+            return existingKey === pairingKey;
+          });
+          
+          if (existingGame && !existingGame.completed && game.completed) {
+            // Replace incomplete game with completed one
+            uniqueGames.delete(existingGame.id);
+            uniqueGames.set(game.id, game);
+          }
+        }
+      }
+      
+      // Sort games by ID to maintain consistent order
+      const deduplicatedGames = Array.from(uniqueGames.values()).sort((a, b) => {
+        // Sort by white player ID, then black player ID for consistent ordering
+        if (a.white_player_id !== b.white_player_id) {
+          return a.white_player_id - b.white_player_id;
+        }
+        const aBlack = a.black_player_id || 0;
+        const bBlack = b.black_player_id || 0;
+        return aBlack - bBlack;
+      });
+      
+      setGames(deduplicatedGames);
       setRegistrations(registrationsData);
       
       // Build player name cache from registrations
@@ -213,15 +256,15 @@ export default function PairingsView({ tournamentId, roundNumber }: PairingsView
         </Button>
       </Box>
 
-      <TableContainer component={Paper}>
-        <Table>
+      <TableContainer component={Paper} sx={{ maxHeight: '70vh', overflow: 'auto' }}>
+        <Table stickyHeader>
           <TableHead>
             <TableRow>
-              <TableCell>Board</TableCell>
-              <TableCell>White</TableCell>
-              <TableCell align="center">Result</TableCell>
-              <TableCell>Black</TableCell>
-              <TableCell align="center">Actions</TableCell>
+              <TableCell sx={{ fontWeight: 'bold', bgcolor: 'background.default' }}>Board</TableCell>
+              <TableCell sx={{ fontWeight: 'bold', bgcolor: 'background.default' }}>White</TableCell>
+              <TableCell align="center" sx={{ fontWeight: 'bold', bgcolor: 'background.default' }}>Result</TableCell>
+              <TableCell sx={{ fontWeight: 'bold', bgcolor: 'background.default' }}>Black</TableCell>
+              <TableCell align="center" sx={{ fontWeight: 'bold', bgcolor: 'background.default' }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -234,27 +277,32 @@ export default function PairingsView({ tournamentId, roundNumber }: PairingsView
                 <TableRow
                   key={game.id}
                   sx={{
-                    bgcolor: isCompleted ? 'success.light' : 'transparent',
+                    bgcolor: isCompleted ? 'success.light' : 'background.paper',
                     '&:hover': { bgcolor: 'action.hover' },
+                    '&:nth-of-type(even)': {
+                      bgcolor: isCompleted ? 'success.light' : 'action.hover',
+                    },
                   }}
                 >
                   <TableCell>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                    <Typography variant="body1" sx={{ fontWeight: 'bold', fontSize: '0.95rem' }}>
                       {boardNumber}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
                       {getPlayerName(game.white_player_id)}
                     </Typography>
                   </TableCell>
                   <TableCell align="center">
                     {isBye ? (
-                      <Chip label="BYE" color="info" />
+                      <Chip label="BYE" color="info" size="small" />
                     ) : (
                       <Chip
                         label={getResultLabel(game.result)}
                         color={isCompleted ? 'success' : 'default'}
+                        size="small"
+                        variant={isCompleted ? 'filled' : 'outlined'}
                       />
                     )}
                   </TableCell>
@@ -264,7 +312,7 @@ export default function PairingsView({ tournamentId, roundNumber }: PairingsView
                         BYE
                       </Typography>
                     ) : (
-                      <Typography variant="body1" sx={{ fontWeight: 500 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
                         {getPlayerName(game.black_player_id!)}
                       </Typography>
                     )}
