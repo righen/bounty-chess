@@ -284,11 +284,8 @@ export default function ResultEntryDialog({
               <Chip label="White" size="small" />
             </Box>
             <Typography variant="body2" color="text.secondary">
-              Pesos: {whitePlayerData.bounty}₱ • Wins: {whitePlayerData.wins} • 
+              Wins: {whitePlayerData.wins} • 
               Status: <Chip label={whitePlayerData.criminalStatus} size="small" sx={{ ml: 0.5 }} />
-              {whitePlayerData.hasSheriffBadge && (
-                <Chip label="Sheriff" size="small" color="warning" sx={{ ml: 0.5 }} />
-              )}
             </Typography>
           </Paper>
 
@@ -300,11 +297,8 @@ export default function ResultEntryDialog({
               <Chip label="Black" size="small" />
             </Box>
             <Typography variant="body2" color="text.secondary">
-              Pesos: {blackPlayerData.bounty}₱ • Wins: {blackPlayerData.wins} • 
+              Wins: {blackPlayerData.wins} • 
               Status: <Chip label={blackPlayerData.criminalStatus} size="small" sx={{ ml: 0.5 }} />
-              {blackPlayerData.hasSheriffBadge && (
-                <Chip label="Sheriff" size="small" color="warning" sx={{ ml: 0.5 }} />
-              )}
             </Typography>
           </Paper>
         </Box>
@@ -372,61 +366,6 @@ export default function ResultEntryDialog({
           </RadioGroup>
         </FormControl>
 
-        {/* Sheriff Badge Usage */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>
-            Sheriff Badge Usage
-          </Typography>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={whiteSheriffUsed}
-                onChange={(e) => setWhiteSheriffUsed(e.target.checked)}
-                disabled={!whitePlayerData.hasSheriffBadge}
-              />
-            }
-            label={`White used Sheriff Badge${!whitePlayerData.hasSheriffBadge ? ' (not available)' : ''}`}
-          />
-          <br />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={blackSheriffUsed}
-                onChange={(e) => setBlackSheriffUsed(e.target.checked)}
-                disabled={!blackPlayerData.hasSheriffBadge}
-              />
-            }
-            label={`Black used Sheriff Badge${!blackPlayerData.hasSheriffBadge ? ' (not available)' : ''}`}
-          />
-        </Box>
-
-        {/* Preview */}
-        {preview && (
-          <Paper sx={{ p: 2, mb: 3, bgcolor: 'info.light', color: 'info.contrastText' }}>
-            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
-              Preview - Pesos Transfer
-            </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Typography variant="body2">
-                Transfer Amount: <strong>{preview.bountyTransfer}₱</strong>
-              </Typography>
-              <Typography variant="body2">
-                White: {preview.whiteBountyChange >= 0 ? '+' : ''}{preview.whiteBountyChange}₱
-                {' → '}
-                {whitePlayerData.bounty + preview.whiteBountyChange}₱
-                {' '}
-                <Chip label={preview.whiteCriminalStatus} size="small" />
-              </Typography>
-              <Typography variant="body2">
-                Black: {preview.blackBountyChange >= 0 ? '+' : ''}{preview.blackBountyChange}₱
-                {' → '}
-                {blackPlayerData.bounty + preview.blackBountyChange}₱
-                {' '}
-                <Chip label={preview.blackCriminalStatus} size="small" />
-              </Typography>
-            </Box>
-          </Paper>
-        )}
 
         {/* Notes */}
         <TextField
