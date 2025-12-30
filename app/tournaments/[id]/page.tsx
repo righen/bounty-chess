@@ -219,12 +219,19 @@ function TournamentDetailPage() {
             {tournament.location} • {new Date(tournament.start_date).toLocaleDateString()}
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
           <Button
             variant="outlined"
             onClick={() => router.push(`/tournaments/${tournamentId}/check-in`)}
           >
             Check-In
+          </Button>
+          <Button
+            variant="outlined"
+            color="secondary"
+            onClick={() => router.push(`/tournaments/${tournamentId}/control`)}
+          >
+            Tournament Control
           </Button>
           <Button
             variant="contained"
