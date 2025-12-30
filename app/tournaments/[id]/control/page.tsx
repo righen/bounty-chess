@@ -29,6 +29,16 @@ import { getTournament, Tournament } from '@/lib/tournament-store';
 import { getTournamentRegistrations, RegistrationWithPlayer } from '@/lib/registration-store';
 import { startTournament, generateNextRound } from '@/lib/tournament-rounds';
 import PairingsView from '@/components/PairingsView';
+import Leaderboard from '@/components/Leaderboard';
+import { Player } from '@/types';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from '@mui/material';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -154,6 +164,35 @@ function TournamentControlPage() {
 
   const checkedInPlayers = registrations.filter(r => r.checked_in).length;
   const canStartTournament = checkedInPlayers >= 2 && tournament.status === 'draft';
+
+  // Convert registrations to Player format for Leaderboard
+  const convertRegistrationsToPlayers = (): Player[] => {
+    return registrations
+      .filter(r => r.checked_in) // Only show checked-in players
+      .map(reg => {
+        const regAny = reg as any;
+        return {
+          id: regAny.player_pool_id || regAny.player_id || 0,
+          name: reg.player?.name || regAny.player_name || 'Unknown',
+          surname: reg.player?.surname || regAny.player_surname || 'Player',
+          birthdate: reg.player?.birthdate || '',
+          currentAddress: reg.player?.phone || '',
+          meal: '',
+          paymentProof: '',
+          transferName: '',
+          age: reg.player?.age || regAny.player_age || 0,
+          gender: (reg.player?.gender as 'M' | 'F') || regAny.player_gender || 'M',
+          bounty: regAny.current_bounty || regAny.initial_bounty || tournament.initial_bounty || 0,
+          hasSheriffBadge: regAny.has_sheriff_badge || false,
+          criminalStatus: (regAny.criminal_status as 'normal' | 'angry' | 'mad') || 'normal',
+          wins: regAny.wins || 0,
+          losses: regAny.losses || 0,
+          draws: regAny.draws || 0,
+          opponentIds: regAny.opponent_ids || [],
+          colorHistory: (regAny.color_history as ('W' | 'B' | 'BYE')[]) || [],
+        };
+      });
+  };
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
@@ -299,27 +338,82 @@ function TournamentControlPage() {
       </TabPanel>
 
       <TabPanel value={selectedTab} index={1}>
-        <Paper sx={{ p: 3, mt: 2 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Current Standings
-          </Typography>
-          <Alert severity="info">
-            Standings view coming next! This will show live leaderboard with scores, bounty, and rankings.
-          </Alert>
-        </Paper>
+        <Box sx={{ mt: 2 }}>
+          <Leaderboard
+            players={convertRegistrationsToPlayers()}
+            currentRound={tournament.current_round}
+            totalRounds={tournament.total_rounds}
+            tournamentStarted={tournament.status === 'in_progress' || tournament.status === 'completed'}
+          />
+        </Box>
       </TabPanel>
 
       <TabPanel value={selectedTab} index={2}>
-        <Paper sx={{ p: 3, mt: 2 }}>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            Registered Players ({registrations.length})
-          </Typography>
+        <Paper sx={{ mt: 2 }}>
+          <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+            <Typography variant="h6">
+              Registered Players ({registrations.length})
+            </Typography>
+          </Box>
           {registrations.length === 0 ? (
-            <Alert severity="info">No players registered yet.</Alert>
+            <Box sx={{ p: 3 }}>
+              <Alert severity="info">No players registered yet.</Alert>
+            </Box>
           ) : (
-            <Alert severity="info">
-              Players list view coming next! This will show all registered players with their status.
-            </Alert>
+            <TableContainer>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>#</TableCell>
+                    <TableCell>Name</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Entry Fee</TableCell>
+                    <TableCell>Wins</TableCell>
+                    <TableCell>Losses</TableCell>
+                    <TableCell>Draws</TableCell>
+                    <TableCell>Pesos</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {registrations.map((reg, index) => {
+                    const regAny = reg as any;
+                    return (
+                      <TableRow key={reg.id} hover>
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {reg.player?.name || regAny.player_name || 'Unknown'}{' '}
+                            {reg.player?.surname || regAny.player_surname || 'Player'}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={reg.checked_in ? 'Checked In' : 'Registered'}
+                            color={reg.checked_in ? 'success' : 'default'}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={regAny.entry_fee_paid ? 'Paid' : 'Pending'}
+                            color={regAny.entry_fee_paid ? 'success' : 'warning'}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>{regAny.wins || 0}</TableCell>
+                        <TableCell>{regAny.losses || 0}</TableCell>
+                        <TableCell>{regAny.draws || 0}</TableCell>
+                        <TableCell>
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            {regAny.current_bounty || regAny.initial_bounty || tournament.initial_bounty || 0}₱
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
           )}
         </Paper>
       </TabPanel>

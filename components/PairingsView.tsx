@@ -219,17 +219,16 @@ export default function PairingsView({ tournamentId, roundNumber }: PairingsView
             <TableRow>
               <TableCell>Board</TableCell>
               <TableCell>White</TableCell>
-              <TableCell>Pesos</TableCell>
               <TableCell align="center">Result</TableCell>
               <TableCell>Black</TableCell>
-              <TableCell>Pesos</TableCell>
               <TableCell align="center">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {games.map((game) => {
-              const isBye = !game.black_player_id;
+            {games.map((game, index) => {
+              const isBye = !game.black_player_id || game.black_player_id === 0;
               const isCompleted = game.completed;
+              const boardNumber = game.board_number || index + 1; // Use board_number if available, otherwise use index + 1
 
               return (
                 <TableRow
@@ -241,22 +240,13 @@ export default function PairingsView({ tournamentId, roundNumber }: PairingsView
                 >
                   <TableCell>
                     <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-                      {game.board_number}
+                      {boardNumber}
                     </Typography>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body1" sx={{ fontWeight: 500 }}>
                       {getPlayerName(game.white_player_id)}
                     </Typography>
-                  </TableCell>
-                  <TableCell>
-                    {getPlayerBounty(game.white_player_id) > 0 && (
-                      <Chip
-                        label={formatBounty(getPlayerBounty(game.white_player_id))}
-                        size="small"
-                        color="primary"
-                      />
-                    )}
                   </TableCell>
                   <TableCell align="center">
                     {isBye ? (
@@ -277,15 +267,6 @@ export default function PairingsView({ tournamentId, roundNumber }: PairingsView
                       <Typography variant="body1" sx={{ fontWeight: 500 }}>
                         {getPlayerName(game.black_player_id!)}
                       </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {!isBye && getPlayerBounty(game.black_player_id!) > 0 && (
-                      <Chip
-                        label={formatBounty(getPlayerBounty(game.black_player_id!))}
-                        size="small"
-                        color="primary"
-                      />
                     )}
                   </TableCell>
                   <TableCell align="center">
