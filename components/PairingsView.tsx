@@ -72,19 +72,40 @@ export default function PairingsView({ tournamentId, roundNumber }: PairingsView
   };
 
   const getPlayerName = (playerId: number): string => {
-    const reg = registrations.find(r => (r.player_id || r.player_pool_id) === playerId);
-    if (!reg) return `Player ${playerId}`;
+    // Try to find by player_pool_id first (new schema), then player_id (old schema)
+    const reg = registrations.find(r => {
+      const regAny = r as any;
+      return (regAny.player_pool_id === playerId) || (regAny.player_id === playerId);
+    });
+    if (!reg || !reg.player) {
+      // Fallback: try to get from player_name and player_surname if available
+      const regFallback = registrations.find(r => {
+        const regAny = r as any;
+        return (regAny.player_pool_id === playerId) || (regAny.player_id === playerId);
+      });
+      if (regFallback) {
+        const regAny = regFallback as any;
+        if (regAny.player_name && regAny.player_surname) {
+          return `${regAny.player_name} ${regAny.player_surname}`;
+        }
+      }
+      return `Player ${playerId}`;
+    }
     return `${reg.player.name} ${reg.player.surname}`;
   };
 
   const getPlayerBounty = (playerId: number): number => {
-    const reg = registrations.find(r => (r.player_id || r.player_pool_id) === playerId);
+    const reg = registrations.find(r => {
+      const regAny = r as any;
+      return (regAny.player_pool_id === playerId) || (regAny.player_id === playerId);
+    });
     if (!reg) return 0;
     const regAny = reg as any;
-    return regAny.current_bounty || 0;
+    return regAny.current_bounty || regAny.initial_bounty || 0;
   };
 
   const formatBounty = (amount: number): string => {
+    if (amount === 0) return ''; // Don't show 0₱
     return `${amount}₱`;
   };
 
@@ -176,11 +197,13 @@ export default function PairingsView({ tournamentId, roundNumber }: PairingsView
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Chip
-                      label={formatBounty(getPlayerBounty(game.white_player_id))}
-                      size="small"
-                      color="primary"
-                    />
+                    {getPlayerBounty(game.white_player_id) > 0 && (
+                      <Chip
+                        label={formatBounty(getPlayerBounty(game.white_player_id))}
+                        size="small"
+                        color="primary"
+                      />
+                    )}
                   </TableCell>
                   <TableCell align="center">
                     {isBye ? (
@@ -204,7 +227,7 @@ export default function PairingsView({ tournamentId, roundNumber }: PairingsView
                     )}
                   </TableCell>
                   <TableCell>
-                    {!isBye && (
+                    {!isBye && getPlayerBounty(game.black_player_id!) > 0 && (
                       <Chip
                         label={formatBounty(getPlayerBounty(game.black_player_id!))}
                         size="small"

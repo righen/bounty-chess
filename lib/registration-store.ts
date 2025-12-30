@@ -190,10 +190,28 @@ export async function bulkRegisterPlayers(
   let failed = 0;
   const errors: string[] = [];
 
+  // Check for existing registrations to avoid duplicates
+  const { data: existingRegs } = await supabase
+    .from('tournament_registrations')
+    .select('player_pool_id')
+    .eq('tournament_id', tournamentId)
+    .in('player_pool_id', playerIds);
+
+  const existingPlayerIds = new Set(existingRegs?.map(r => r.player_pool_id) || []);
+
   for (const playerId of playerIds) {
     try {
+      // Skip if already registered
+      if (existingPlayerIds.has(playerId)) {
+        failed++;
+        errors.push(`Player ${playerId}: Already registered`);
+        continue;
+      }
+      
       await registerPlayer(tournamentId, playerId, entryFeePaid);
       success++;
+      // Add to set to prevent duplicate registrations in same batch
+      existingPlayerIds.add(playerId);
     } catch (error: any) {
       failed++;
       errors.push(`Player ${playerId}: ${error.message}`);
