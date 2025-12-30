@@ -65,7 +65,7 @@ WHERE round_number = 1;
 -- Step 7: Show all Round 1 games with player names
 SELECT 
   g.id as game_id,
-  g.board_number,
+  ROW_NUMBER() OVER (ORDER BY g.id) as board_number,
   g.round_number,
   wp.name || ' ' || wp.surname as white_player,
   bp.name || ' ' || bp.surname as black_player,
@@ -74,7 +74,7 @@ FROM games g
 LEFT JOIN player_pool wp ON g.white_player_id = wp.id
 LEFT JOIN player_pool bp ON g.black_player_id = bp.id
 WHERE g.round_number = 1
-ORDER BY g.board_number, g.id;
+ORDER BY g.id;
 
 -- Step 8: Check if there are duplicate player_pool entries being used
 SELECT 
