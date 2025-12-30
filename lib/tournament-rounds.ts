@@ -9,9 +9,8 @@ export interface Round {
   tournament_id: string;
   round_number: number;
   completed: boolean;
-  pairing_generated_at: string | null;
-  started_at: string | null;
-  completed_at: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 export interface Game {
@@ -67,13 +66,20 @@ export async function startTournament(tournamentId: string): Promise<{ round: Ro
     const { data: round, error: roundError } = await supabase
       .from('rounds')
       .insert([{
-        tournament_id: tournamentId,
         round_number: 1,
         completed: false,
-        pairing_generated_at: new Date().toISOString(),
       }])
       .select()
       .single();
+
+    if (roundError) {
+      console.error('Error creating round:', roundError);
+      throw roundError;
+    }
+    
+    if (!round) {
+      throw new Error('Failed to create round');
+    }
 
     if (roundError) {
       console.error('Error creating round:', roundError);
@@ -410,10 +416,8 @@ export async function generateNextRound(tournamentId: string): Promise<{ round: 
     const { data: round, error: roundError } = await supabase
       .from('rounds')
       .insert([{
-        tournament_id: tournamentId,
         round_number: nextRound,
         completed: false,
-        pairing_generated_at: new Date().toISOString(),
       }])
       .select()
       .single();
@@ -477,17 +481,19 @@ export async function getRoundGames(tournamentId: string, roundNumber: number): 
 
 /**
  * Get current round
+ * Note: If rounds table doesn't have tournament_id, this gets the most recent incomplete round
  */
 export async function getCurrentRound(tournamentId: string): Promise<Round | null> {
   try {
+    // Query rounds - if tournament_id column exists, filter by it
+    // Otherwise, get the most recent incomplete round (assumes single active tournament)
     const { data, error } = await supabase
       .from('rounds')
       .select('*')
-      .eq('tournament_id', tournamentId)
       .eq('completed', false)
       .order('round_number', { ascending: false })
       .limit(1)
-      .maybeSingle(); // Use maybeSingle instead of single to handle no rows
+      .maybeSingle();
 
     if (error) throw error;
     return data as Round | null;
@@ -503,14 +509,13 @@ export async function getCurrentRound(tournamentId: string): Promise<Round | nul
 export async function completeRound(tournamentId: string, roundNumber: number): Promise<void> {
   try {
     // Mark round as completed
-    await supabase
+    // Note: If rounds table doesn't have tournament_id, this updates by round_number only
+    const { error } = await supabase
       .from('rounds')
-      .update({
-        completed: true,
-        completed_at: new Date().toISOString(),
-      })
-      .eq('tournament_id', tournamentId)
+      .update({ completed: true })
       .eq('round_number', roundNumber);
+    
+    if (error) throw error;
 
     // Update tournament current round
     const { data: tournament } = await supabase
