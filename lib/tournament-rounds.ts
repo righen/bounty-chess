@@ -387,15 +387,32 @@ export async function generateRoundPairings(
 async function calculatePlayerScores(tournamentId: string): Promise<Map<number, { wins: number; draws: number; losses: number; score: number }>> {
   const scores = new Map<number, { wins: number; draws: number; losses: number; score: number }>();
 
-  const { data: games, error } = await supabase
+  // Get tournament registrations to filter games
+  const registrations = await getTournamentRegistrations(tournamentId);
+  const registeredPlayerIds = new Set<number>();
+  registrations.forEach(reg => {
+    const regAny = reg as any;
+    const playerId = regAny.player_pool_id || regAny.player_id;
+    if (playerId) registeredPlayerIds.add(playerId);
+  });
+
+  // Query games - filter by tournament using game ID pattern
+  const { data: allGames, error } = await supabase
     .from('games')
     .select('white_player_id, black_player_id, result')
-    .eq('tournament_id', tournamentId)
-    .eq('completed', true);
+    .eq('completed', true)
+    .like('id', `game-${tournamentId}-%`);
 
   if (error) throw error;
 
-  for (const game of games || []) {
+  // Filter to only games where both players are registered in this tournament
+  const games = (allGames || []).filter(game => {
+    const whiteRegistered = registeredPlayerIds.has(game.white_player_id);
+    const blackRegistered = game.black_player_id === 0 || registeredPlayerIds.has(game.black_player_id);
+    return whiteRegistered && blackRegistered;
+  });
+
+  for (const game of games) {
     if (!game.result) continue;
 
     // Initialize if not exists
@@ -472,6 +489,13 @@ export async function generateNextRound(tournamentId: string): Promise<{ round: 
 
     // 3. Get all active players (checked-in, not withdrawn)
     const registrations = await getTournamentRegistrations(tournamentId);
+    const registeredPlayerIds = new Set<number>();
+    registrations.forEach(reg => {
+      const regAny = reg as any;
+      const playerId = regAny.player_pool_id || regAny.player_id;
+      if (playerId) registeredPlayerIds.add(playerId);
+    });
+    
     const activePlayers = registrations.filter(r => {
       const regAny = r as any;
       return r.checked_in && !regAny.withdrawn;
@@ -489,12 +513,19 @@ export async function generateNextRound(tournamentId: string): Promise<{ round: 
         const playerId = reg.player_id || reg.player_pool_id;
         const playerScore = scores.get(playerId) || { wins: 0, draws: 0, losses: 0, score: 0 };
         
-        // Get opponent history from games
-        const { data: playerGames } = await supabase
+        // Get opponent history from games - filter by tournament
+        const { data: allPlayerGames } = await supabase
           .from('games')
           .select('white_player_id, black_player_id')
-          .eq('tournament_id', tournamentId)
+          .like('id', `game-${tournamentId}-%`)
           .or(`white_player_id.eq.${playerId},black_player_id.eq.${playerId}`);
+        
+        // Filter to only games where both players are registered
+        const playerGames = (allPlayerGames || []).filter(game => {
+          const whiteRegistered = registeredPlayerIds.has(game.white_player_id);
+          const blackRegistered = game.black_player_id === 0 || registeredPlayerIds.has(game.black_player_id);
+          return whiteRegistered && blackRegistered;
+        });
 
         const opponentIds = new Set<number>();
         for (const game of playerGames || []) {
@@ -505,13 +536,20 @@ export async function generateNextRound(tournamentId: string): Promise<{ round: 
           }
         }
 
-        // Get color history
-        const { data: playerGamesWithColors } = await supabase
+        // Get color history from games - filter by tournament
+        const { data: allPlayerGamesWithColors } = await supabase
           .from('games')
           .select('white_player_id, black_player_id, round_number')
-          .eq('tournament_id', tournamentId)
+          .like('id', `game-${tournamentId}-%`)
           .or(`white_player_id.eq.${playerId},black_player_id.eq.${playerId}`)
           .order('round_number');
+        
+        // Filter to only games where both players are registered
+        const playerGamesWithColors = (allPlayerGamesWithColors || []).filter(game => {
+          const whiteRegistered = registeredPlayerIds.has(game.white_player_id);
+          const blackRegistered = game.black_player_id === 0 || registeredPlayerIds.has(game.black_player_id);
+          return whiteRegistered && blackRegistered;
+        });
 
         const colorHistory: ('W' | 'B' | 'BYE')[] = [];
         for (const game of playerGamesWithColors || []) {
@@ -589,6 +627,7 @@ export async function generateNextRound(tournamentId: string): Promise<{ round: 
 
 /**
  * Get current round games - FILTERED BY TOURNAMENT
+ * This is critical to prevent showing games from other tournaments
  */
 export async function getRoundGames(tournamentId: string, roundNumber: number): Promise<Game[]> {
   try {
@@ -601,47 +640,76 @@ export async function getRoundGames(tournamentId: string, roundNumber: number): 
       if (playerId) registeredPlayerIds.add(playerId);
     });
     
-    console.log(`Filtering games for tournament ${tournamentId}, Round ${roundNumber}`);
-    console.log(`Registered players in tournament: ${registeredPlayerIds.size}`);
+    if (registeredPlayerIds.size === 0) {
+      console.warn(`No registered players found for tournament ${tournamentId}`);
+      return [];
+    }
+    
+    console.log(`🔍 Filtering games for tournament ${tournamentId}, Round ${roundNumber}`);
+    console.log(`👥 Registered players in tournament: ${registeredPlayerIds.size}`);
+    
+    // Get the round_id for this tournament's round (if rounds table has tournament_id)
+    let tournamentRoundId: string | number | null = null;
+    try {
+      const { data: round } = await supabase
+        .from('rounds')
+        .select('id')
+        .eq('round_number', roundNumber)
+        .order('id', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (round) {
+        tournamentRoundId = round.id;
+      }
+    } catch (err) {
+      // Rounds table might not have tournament_id, continue
+    }
     
     // Get all games for this round number
-    const { data: allGames, error } = await supabase
+    let query = supabase
       .from('games')
       .select('*')
-      .eq('round_number', roundNumber)
-      .order('id');
+      .eq('round_number', roundNumber);
+    
+    // If we have a round_id, filter by it (more precise)
+    if (tournamentRoundId) {
+      query = query.eq('round_id', tournamentRoundId);
+    }
+    
+    const { data: allGames, error } = await query.order('id');
     
     if (error) throw error;
     
-    console.log(`Total games found for Round ${roundNumber}: ${allGames?.length || 0}`);
+    console.log(`📊 Total games found for Round ${roundNumber}: ${allGames?.length || 0}`);
     
-    // Filter games to only include those where BOTH players are registered in this tournament
-    // AND game ID matches tournament pattern (game-{tournamentId}-r{roundNumber}-...)
+    // STRICT FILTERING: Game must match BOTH criteria:
+    // 1. Game ID matches tournament pattern (game-{tournamentId}-r{roundNumber}-...)
+    // 2. BOTH players are registered in this tournament
     const filteredGames = (allGames || []).filter(game => {
-      // Check if game ID matches tournament pattern
-      const gameIdMatches = game.id.startsWith(`game-${tournamentId}-`);
+      // Primary filter: Game ID must match tournament pattern
+      const gameIdMatches = game.id && game.id.startsWith(`game-${tournamentId}-`);
       
-      // Check if white player is registered
+      // Secondary filter: Both players must be registered
       const whiteRegistered = registeredPlayerIds.has(game.white_player_id);
-      
-      // Check if black player is registered (or is BYE)
       const blackRegistered = game.black_player_id === 0 || 
                              game.black_player_id === null || 
                              registeredPlayerIds.has(game.black_player_id);
+      const bothPlayersRegistered = whiteRegistered && blackRegistered;
       
-      // Game belongs to this tournament if:
-      // 1. Game ID matches tournament pattern, OR
-      // 2. Both players are registered in this tournament
-      const belongsToTournament = gameIdMatches || (whiteRegistered && blackRegistered);
+      // Game belongs to this tournament ONLY if:
+      // - Game ID matches tournament pattern AND both players are registered
+      // This ensures we don't mix tournaments even if player IDs overlap
+      const belongsToTournament = gameIdMatches && bothPlayersRegistered;
       
       if (!belongsToTournament) {
-        console.log(`Filtered out game ${game.id}: white=${whiteRegistered}, black=${blackRegistered}, idMatch=${gameIdMatches}`);
+        console.log(`❌ Filtered out game ${game.id}: idMatch=${gameIdMatches}, playersRegistered=${bothPlayersRegistered}`);
       }
       
       return belongsToTournament;
     });
     
-    console.log(`Filtered games for tournament: ${filteredGames.length}`);
+    console.log(`✅ Filtered games for tournament: ${filteredGames.length} (expected: ${Math.ceil(registeredPlayerIds.size / 2)})`);
     
     return filteredGames as Game[];
   } catch (error) {

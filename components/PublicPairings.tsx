@@ -38,9 +38,10 @@ interface Game {
 
 interface PublicPairingsProps {
   currentRound: number;
+  tournamentId?: string; // Optional - if provided, filter by tournament
 }
 
-export default function PublicPairings({ currentRound }: PublicPairingsProps) {
+export default function PublicPairings({ currentRound, tournamentId }: PublicPairingsProps) {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -80,12 +81,18 @@ export default function PublicPairings({ currentRound }: PublicPairingsProps) {
 
       console.log(`🎮 Loading games for Round ${currentRound}...`);
 
-      // Load games first
-      const { data: gamesData, error: gamesError } = await supabase
+      // Load games first - filter by tournament if provided
+      let gamesQuery = supabase
         .from('games')
         .select('*')
-        .eq('round_number', currentRound)
-        .order('id');
+        .eq('round_number', currentRound);
+      
+      // Filter by tournament using game ID pattern
+      if (tournamentId) {
+        gamesQuery = gamesQuery.like('id', `game-${tournamentId}-%`);
+      }
+      
+      const { data: gamesData, error: gamesError } = await gamesQuery.order('id');
 
       if (gamesError) {
         console.error('❌ Error loading games:', gamesError);
