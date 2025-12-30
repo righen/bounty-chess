@@ -144,6 +144,11 @@ export default function PairingsView({ tournamentId, roundNumber }: PairingsView
   };
 
   const handleOpenResultDialog = (gameId: string) => {
+    console.log('Opening result dialog for game:', gameId);
+    if (!gameId) {
+      console.error('No game ID provided');
+      return;
+    }
     setSelectedGameId(gameId);
     setResultDialogOpen(true);
   };

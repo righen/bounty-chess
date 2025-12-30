@@ -193,9 +193,7 @@ export default function Leaderboard({
               <TableCell sx={{ fontWeight: 'bold' }}>Name</TableCell>
               <TableCell align="center" sx={{ fontWeight: 'bold' }}>Age</TableCell>
               <TableCell align="center" sx={{ fontWeight: 'bold' }}>Gender</TableCell>
-              <TableCell align="center" sx={{ fontWeight: 'bold' }}>Pesos</TableCell>
               <TableCell align="center" sx={{ fontWeight: 'bold' }}>Record</TableCell>
-              <TableCell align="center" sx={{ fontWeight: 'bold' }}>Sheriff</TableCell>
               <TableCell align="center" sx={{ fontWeight: 'bold' }}>Status</TableCell>
             </TableRow>
           </TableHead>
@@ -244,11 +242,6 @@ export default function Leaderboard({
                   />
                 </TableCell>
                 <TableCell align="center">
-                  <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'secondary.main' }}>
-                    {formatBounty(player.bounty)}
-                  </Typography>
-                </TableCell>
-                <TableCell align="center">
                   <Typography variant="body2">
                     <Box component="span" sx={{ color: 'success.main' }}>{player.wins}W</Box>
                     {' - '}
@@ -256,13 +249,6 @@ export default function Leaderboard({
                     {' - '}
                     <Box component="span" sx={{ color: 'text.secondary' }}>{player.draws}D</Box>
                   </Typography>
-                </TableCell>
-                <TableCell align="center">
-                  {player.hasSheriffBadge ? (
-                    <Typography sx={{ fontSize: '1.5rem' }}>🛡️</Typography>
-                  ) : (
-                    <Typography sx={{ color: 'text.disabled' }}>✗</Typography>
-                  )}
                 </TableCell>
                 <TableCell align="center">
                   {player.criminalStatus !== 'normal' && (

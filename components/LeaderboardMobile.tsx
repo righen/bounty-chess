@@ -50,23 +50,6 @@ export default function LeaderboardMobile({ players }: LeaderboardMobileProps) {
               </Typography>
             </Box>
             
-            {/* Compact Pesos Badge */}
-            <Box sx={{ 
-              bgcolor: 'secondary.main', 
-              color: 'white', 
-              px: 1.5, 
-              py: 0.5, 
-              borderRadius: 1,
-              textAlign: 'center',
-              minWidth: 60,
-            }}>
-              <Typography variant="caption" sx={{ fontSize: '0.65rem', display: 'block', lineHeight: 1 }}>
-                Pesos
-              </Typography>
-              <Typography variant="h6" sx={{ fontWeight: 'bold', lineHeight: 1 }}>
-                {player.bounty}₱
-              </Typography>
-            </Box>
           </Box>
 
           {/* Compact Stats Grid - 2x2 */}
@@ -114,15 +97,6 @@ export default function LeaderboardMobile({ players }: LeaderboardMobileProps) {
               </Typography>
             </Box>
 
-            {/* Sheriff */}
-            <Box sx={{ bgcolor: 'grey.100', borderRadius: 1, p: 0.75, textAlign: 'center' }}>
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', display: 'block' }}>
-                Sheriff
-              </Typography>
-              <Typography sx={{ fontSize: '1.2rem', lineHeight: 1 }}>
-                {player.hasSheriffBadge ? '🛡️' : '✗'}
-              </Typography>
-            </Box>
           </Box>
 
           {/* Criminal Status - Only show if not normal */}
