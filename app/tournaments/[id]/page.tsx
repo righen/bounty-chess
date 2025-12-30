@@ -63,6 +63,7 @@ function TournamentDetailPage() {
   const [availablePlayers, setAvailablePlayers] = useState<PlayerPoolRecord[]>([]);
   const [stats, setStats] = useState({ total: 0, paidFees: 0, checkedIn: 0, pending: 0 });
   const [loading, setLoading] = useState(true);
+  const [addingPlayers, setAddingPlayers] = useState(false);
 
   // Dialog states
   const [addPlayerDialog, setAddPlayerDialog] = useState(false);
@@ -99,6 +100,15 @@ function TournamentDetailPage() {
     }
   }, [searchQuery, availablePlayers]);
 
+  // Reset selections when dialog opens/closes
+  useEffect(() => {
+    if (!addPlayerDialog) {
+      setSelectedPlayers([]);
+      setSearchQuery('');
+      setEntryFeePaid(false);
+    }
+  }, [addPlayerDialog]);
+
   const loadData = async () => {
     try {
       setLoading(true);
@@ -132,6 +142,7 @@ function TournamentDetailPage() {
       return;
     }
 
+    setAddingPlayers(true);
     try {
       const result = await bulkRegisterPlayers(tournamentId, selectedPlayers, entryFeePaid);
       
@@ -139,17 +150,27 @@ function TournamentDetailPage() {
         showSnackbar(`Successfully registered ${result.success} player(s)`, 'success');
       }
       if (result.failed > 0) {
-        showSnackbar(`Failed to register ${result.failed} player(s)`, 'error');
+        showSnackbar(`Failed to register ${result.failed} player(s): ${result.errors.join(', ')}`, 'error');
         console.error('Registration errors:', result.errors);
       }
 
-      setAddPlayerDialog(false);
-      setSelectedPlayers([]);
-      setSearchQuery('');
-      loadData();
-    } catch (error) {
+      // Only close dialog if all succeeded
+      if (result.failed === 0) {
+        setAddPlayerDialog(false);
+        setSelectedPlayers([]);
+        setSearchQuery('');
+      } else {
+        // Keep dialog open if some failed, but clear successful selections
+        // Remove successfully added players from selection
+        // (We can't easily track which ones succeeded, so just keep dialog open)
+      }
+      
+      await loadData();
+    } catch (error: any) {
       console.error('Error adding players:', error);
-      showSnackbar('Failed to add players', 'error');
+      showSnackbar(`Failed to add players: ${error.message || 'Unknown error'}`, 'error');
+    } finally {
+      setAddingPlayers(false);
     }
   };
 
@@ -479,18 +500,53 @@ function TournamentDetailPage() {
             </Table>
           </TableContainer>
 
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-            {selectedPlayers.length} player(s) selected
-          </Typography>
+          <Box sx={{ mt: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography 
+                variant="body1" 
+                sx={{ 
+                  fontWeight: 'bold',
+                  color: selectedPlayers.length > 0 ? 'primary.main' : 'text.secondary'
+                }}
+              >
+                {selectedPlayers.length} player(s) selected
+              </Typography>
+              {selectedPlayers.length > 0 && (
+                <Chip 
+                  label={selectedPlayers.length} 
+                  color="primary" 
+                  size="small"
+                />
+              )}
+            </Box>
+            {addingPlayers && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CircularProgress size={16} />
+                <Typography variant="body2" color="primary.main" sx={{ fontWeight: 500 }}>
+                  Adding players...
+                </Typography>
+              </Box>
+            )}
+          </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setAddPlayerDialog(false)}>Cancel</Button>
+          <Button 
+            onClick={() => {
+              setAddPlayerDialog(false);
+              setSelectedPlayers([]);
+              setSearchQuery('');
+            }}
+            disabled={addingPlayers}
+          >
+            Cancel
+          </Button>
           <Button
             variant="contained"
             onClick={handleAddPlayers}
-            disabled={selectedPlayers.length === 0}
+            disabled={selectedPlayers.length === 0 || addingPlayers}
+            startIcon={addingPlayers ? <CircularProgress size={16} /> : null}
           >
-            Add {selectedPlayers.length} Player(s)
+            {addingPlayers ? 'Adding...' : `Add ${selectedPlayers.length} Player(s)`}
           </Button>
         </DialogActions>
       </Dialog>
