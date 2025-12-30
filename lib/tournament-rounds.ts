@@ -84,7 +84,47 @@ export async function startTournament(tournamentId: string): Promise<{ round: Ro
     const uniqueCheckedInPlayers = Array.from(uniquePlayers.values());
     console.log(`After removing duplicates: ${uniqueCheckedInPlayers.length} unique checked-in players`);
 
-    // 3. Create Round 1
+    // 3. Check if Round 1 already exists
+    console.log('Checking if Round 1 already exists...');
+    const { data: existingRound, error: checkRoundError } = await supabase
+      .from('rounds')
+      .select('*')
+      .eq('round_number', 1)
+      .order('id', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (checkRoundError) {
+      console.error('Error checking for existing round:', checkRoundError);
+      throw checkRoundError;
+    }
+
+    if (existingRound) {
+      // Check if games already exist for this round
+      const { data: existingGames, error: checkGamesError } = await supabase
+        .from('games')
+        .select('id')
+        .eq('round_number', 1)
+        .limit(1);
+
+      if (checkGamesError) {
+        console.error('Error checking for existing games:', checkGamesError);
+        throw checkGamesError;
+      }
+
+      if (existingGames && existingGames.length > 0) {
+        throw new Error(`Round 1 already exists with ${existingGames.length} games. Cannot start tournament again. Please delete existing Round 1 games first.`);
+      } else {
+        // Round exists but no games - delete the round and create a new one
+        console.log('Round 1 exists but has no games. Deleting and recreating...');
+        await supabase
+          .from('rounds')
+          .delete()
+          .eq('id', existingRound.id);
+      }
+    }
+
+    // 4. Create Round 1
     console.log('Creating Round 1...');
     const { data: round, error: roundError } = await supabase
       .from('rounds')
@@ -111,7 +151,7 @@ export async function startTournament(tournamentId: string): Promise<{ round: Ro
 
     console.log('Round 1 created:', round.id);
 
-    // 4. Generate pairings using FIDE Swiss system
+    // 5. Generate pairings using FIDE Swiss system
     console.log('Generating pairings...');
     const pairingResult = await generateRoundPairings(
       tournamentId,
@@ -123,7 +163,7 @@ export async function startTournament(tournamentId: string): Promise<{ round: Ro
 
     console.log(`Generated ${pairingResult.games.length} games`);
 
-    // 5. Update tournament status
+    // 6. Update tournament status
     console.log('Updating tournament status...');
     const { error: updateError } = await supabase
       .from('tournaments')
@@ -239,6 +279,21 @@ export async function generateRoundPairings(
       gameKeys.add(key);
     }
 
+    // Check if games already exist for this round
+    const { data: existingGames, error: checkExistingGamesError } = await supabase
+      .from('games')
+      .select('id')
+      .eq('round_number', roundNumber);
+
+    if (checkExistingGamesError) {
+      console.error('Error checking for existing games:', checkExistingGamesError);
+      throw checkExistingGamesError;
+    }
+
+    if (existingGames && existingGames.length > 0) {
+      throw new Error(`Round ${roundNumber} already has ${existingGames.length} games. Cannot generate pairings again. Please delete existing games first.`);
+    }
+
     // Create games in database
     console.log(`Creating ${pairingResult.games.length} games in database...`);
     const games: Game[] = [];
@@ -276,6 +331,29 @@ export async function generateRoundPairings(
         
         // Note: tournament_id and board_number don't exist in old schema
         // Can be added via migrations if needed
+        
+        // Check if this specific game already exists
+        const gameKey = fideGame.blackPlayerId === 0 
+          ? `BYE-${fideGame.whitePlayerId}`
+          : `${Math.min(fideGame.whitePlayerId, fideGame.blackPlayerId)}-${Math.max(fideGame.whitePlayerId, fideGame.blackPlayerId)}`;
+        
+        const { data: existingGame, error: checkGameError } = await supabase
+          .from('games')
+          .select('id')
+          .eq('round_number', roundNumber)
+          .eq('white_player_id', fideGame.whitePlayerId)
+          .eq('black_player_id', fideGame.blackPlayerId === 0 ? 0 : fideGame.blackPlayerId)
+          .maybeSingle();
+
+        if (checkGameError && checkGameError.code !== 'PGRST116') {
+          console.error(`Error checking for existing game ${i + 1}:`, checkGameError);
+          throw checkGameError;
+        }
+
+        if (existingGame) {
+          console.warn(`Game ${i + 1} already exists (${gameKey}), skipping...`);
+          continue; // Skip this game, don't create duplicate
+        }
         
         const { data: game, error: gameError } = await supabase
           .from('games')
