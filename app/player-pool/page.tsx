@@ -57,12 +57,14 @@ import {
   getPlayerPoolStats,
   bulkImportPlayersToPool,
 } from '@/lib/player-pool-store';
+import { importTournamentPlayersCSV, loadCSVFromPublic } from '@/lib/csv-import';
 
 function PlayerPoolPage() {
   const router = useRouter();
   const [players, setPlayers] = useState<PlayerPoolRecord[]>([]);
   const [filteredPlayers, setFilteredPlayers] = useState<PlayerPoolRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [csvImportLoading, setCsvImportLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -278,6 +280,34 @@ function PlayerPoolPage() {
     input.click();
   };
 
+  const handleImportTournamentPlayers = async () => {
+    try {
+      setCsvImportLoading(true);
+      const csvContent = await loadCSVFromPublic('tournament-players.csv');
+      const result = await importTournamentPlayersCSV(csvContent);
+      
+      if (result.success > 0) {
+        showSnackbar(
+          `Successfully imported ${result.success} players from tournament-players.csv${result.failed > 0 ? ` (${result.failed} failed)` : ''}`,
+          'success'
+        );
+        loadData();
+      } else {
+        showSnackbar(
+          result.errors.length > 0 
+            ? `Import failed: ${result.errors.join(', ')}`
+            : 'No players were imported',
+          'error'
+        );
+      }
+    } catch (error: any) {
+      console.error('Error importing tournament players:', error);
+      showSnackbar(`Failed to import: ${error.message || 'Unknown error'}`, 'error');
+    } finally {
+      setCsvImportLoading(false);
+    }
+  };
+
   const handleCSVExport = () => {
     const headers = ['name', 'surname', 'email', 'phone', 'birthdate', 'age', 'gender', 'rating', 'fide_id', 'national_id', 'tournaments_played', 'total_games', 'total_wins', 'total_draws', 'total_losses', 'notes', 'active', 'banned'];
     const csv = [
@@ -340,6 +370,15 @@ function PlayerPoolPage() {
             onClick={handleCSVImport}
           >
             Import CSV
+          </Button>
+          <Button
+            variant="outlined"
+            color="secondary"
+            startIcon={csvImportLoading ? <CircularProgress size={16} /> : <UploadIcon />}
+            onClick={handleImportTournamentPlayers}
+            disabled={csvImportLoading}
+          >
+            {csvImportLoading ? 'Importing...' : 'Import Tournament Players'}
           </Button>
           <Button
             variant="outlined"
