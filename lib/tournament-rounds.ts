@@ -61,6 +61,29 @@ export async function startTournament(tournamentId: string): Promise<{ round: Ro
       throw new Error('Need at least 2 checked-in players to start tournament');
     }
 
+    // Remove duplicate players (same player_pool_id registered twice)
+    const uniquePlayers = new Map<number, RegistrationWithPlayer>();
+    const duplicates: RegistrationWithPlayer[] = [];
+    
+    for (const reg of checkedInPlayers) {
+      const regAny = reg as any;
+      const playerId = regAny.player_pool_id || regAny.player_id;
+      
+      if (uniquePlayers.has(playerId)) {
+        console.warn(`Duplicate player found: Player ID ${playerId} (${reg.player?.name || regAny.player_name} ${reg.player?.surname || regAny.player_surname})`);
+        duplicates.push(reg);
+      } else {
+        uniquePlayers.set(playerId, reg);
+      }
+    }
+
+    if (duplicates.length > 0) {
+      console.warn(`Found ${duplicates.length} duplicate registrations. Using first registration for each player.`);
+    }
+
+    const uniqueCheckedInPlayers = Array.from(uniquePlayers.values());
+    console.log(`After removing duplicates: ${uniqueCheckedInPlayers.length} unique checked-in players`);
+
     // 3. Create Round 1
     console.log('Creating Round 1...');
     const { data: round, error: roundError } = await supabase
@@ -94,7 +117,7 @@ export async function startTournament(tournamentId: string): Promise<{ round: Ro
       tournamentId,
       round.id,
       1,
-      checkedInPlayers,
+      uniqueCheckedInPlayers,
       tournament as Tournament
     );
 
@@ -194,6 +217,26 @@ export async function generateRoundPairings(
 
     if (!pairingResult.games || pairingResult.games.length === 0) {
       throw new Error('Pairing succeeded but no games were generated');
+    }
+
+    // Validate expected game count
+    const expectedGames = Math.ceil(players.length / 2);
+    if (pairingResult.games.length !== expectedGames) {
+      console.warn(`Warning: Expected ${expectedGames} games for ${players.length} players, but got ${pairingResult.games.length} games`);
+    }
+
+    // Check for duplicate games before creating
+    const gameKeys = new Set<string>();
+    for (const game of pairingResult.games) {
+      const key = game.blackPlayerId === 0 
+        ? `BYE-${game.whitePlayerId}`
+        : `${Math.min(game.whitePlayerId, game.blackPlayerId)}-${Math.max(game.whitePlayerId, game.blackPlayerId)}`;
+      
+      if (gameKeys.has(key)) {
+        console.error(`Duplicate game detected: ${key}`);
+        throw new Error(`Duplicate game detected in pairing result`);
+      }
+      gameKeys.add(key);
     }
 
     // Create games in database
